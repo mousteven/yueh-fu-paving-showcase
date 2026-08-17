@@ -1,0 +1,2002 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>岳父工程學徒相簿</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#EFE9DE;
+  --surface:#E4DCCB;
+  --surface-2:#D8CDB4;
+  --ink:#2B2622;
+  --ink-soft:#5A5147;
+  --line:#C7BA9E;
+  --brick:#A8492F;
+  --brick-soft:#C97A5D;
+  --moss:#556B45;
+  --moss-soft:#7C9268;
+  --amber:#A87A2A;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B1712; --surface:#242019; --surface-2:#2E281F;
+    --ink:#EDE6D6; --ink-soft:#B8AE99; --line:#453D2E;
+    --brick:#D97A57; --brick-soft:#B5563C; --moss:#9AB07F; --moss-soft:#728C5C; --amber:#D6A24E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B1712; --surface:#242019; --surface-2:#2E281F;
+  --ink:#EDE6D6; --ink-soft:#B8AE99; --line:#453D2E;
+  --brick:#D97A57; --brick-soft:#B5563C; --moss:#9AB07F; --moss-soft:#728C5C; --amber:#D6A24E;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Noto Sans TC","Segoe UI",sans-serif;
+  display:flex; flex-direction:column;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code","Consolas",monospace; letter-spacing:.02em;}
+
+/* top bar */
+header{
+  display:flex; align-items:center; gap:16px;
+  padding:14px 20px; border-bottom:2px solid var(--ink);
+  background:var(--surface);
+}
+header h1{font-size:17px; margin:0; font-weight:800; white-space:nowrap;}
+.tabs{display:flex; gap:6px; margin-left:auto;}
+.tab-btn{
+  font:inherit; font-size:13.5px; font-weight:700; cursor:pointer;
+  padding:8px 16px; border-radius:6px; border:1px solid var(--line);
+  background:transparent; color:var(--ink-soft);
+}
+.tab-btn.active{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+
+.view{display:none; flex:1; min-height:0;}
+.view.active{display:flex;}
+
+/* ===== gallery view (continuous scroll feed) ===== */
+#view-gallery{overflow-y:auto; flex-direction:column;}
+.feed{flex:1; padding:20px 24px 60px; max-width:920px; margin:0 auto; width:100%;}
+.dot{width:8px; height:8px; border-radius:50%; flex:none; display:inline-block;}
+.dot.g{background:var(--moss);}
+.dot.y{background:var(--amber);}
+.dot.n{background:var(--brick);}
+
+@media (max-width:720px){
+  header{flex-wrap:wrap; padding:12px 14px;}
+  header h1{font-size:15px;}
+  .tabs{margin-left:0; width:100%; overflow-x:auto; flex-wrap:nowrap;}
+  .feed{padding:14px 14px 60px;}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:6px;}
+}
+.folder-section{margin-bottom:36px; padding-bottom:32px; border-bottom:1px solid var(--line);}
+.folder-section:last-child{border-bottom:none;}
+.panel-header{margin-bottom:14px;}
+.panel-header h2{font-size:19px; margin:0 0 6px; font-weight:800; display:flex; align-items:center; gap:9px;}
+.panel-header .folder-count{font-size:12px; font-weight:400; color:var(--ink-soft);}
+.panel-header p{font-size:13.5px; color:var(--ink-soft); max-width:70ch; margin:0 0 10px;}
+.facts{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px;}
+.facts li{
+  font-size:12.5px; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line); border-left:3px solid var(--moss);
+  padding:6px 10px; border-radius:4px; max-width:80ch;
+}
+.legend{display:flex; gap:14px; padding:10px 0 16px; font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; max-width:920px; margin:0 auto; width:100%; padding-left:24px; padding-right:24px;}
+.legend span{display:flex; align-items:center; gap:5px;}
+@media (max-width:720px){.legend{padding-left:14px; padding-right:14px;}}
+
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:8px; margin-top:14px;
+}
+.thumb{
+  aspect-ratio:1; border-radius:5px; overflow:hidden; cursor:pointer;
+  border:1px solid var(--line); background:var(--surface-2); position:relative;
+  content-visibility:auto; contain-intrinsic-size:140px 140px;
+}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+
+/* lightbox */
+.lightbox{
+  display:none; position:fixed; inset:0; background:rgba(10,8,6,.92);
+  z-index:50; align-items:center; justify-content:center; flex-direction:column;
+}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:92vw; max-height:80vh; border-radius:4px;}
+.lightbox .lb-caption{color:#EDE6D6; font-size:12.5px; margin-top:12px; font-family:ui-monospace,monospace;}
+.lb-close, .lb-prev, .lb-next{
+  position:absolute; background:none; border:none; color:#EDE6D6; cursor:pointer;
+  font-size:28px; padding:10px;
+}
+.lb-close{top:10px; right:16px;}
+.lb-prev{left:8px; top:50%; transform:translateY(-50%);}
+.lb-next{right:8px; top:50%; transform:translateY(-50%);}
+
+/* ===== notes view ===== */
+#view-notes{overflow-y:auto; justify-content:center;}
+.notes-wrap{max-width:760px; padding:36px 24px 80px; line-height:1.75;}
+.notes-wrap h2{font-size:22px; font-weight:800; margin:36px 0 10px;}
+.notes-wrap h2:first-child{margin-top:0;}
+.notes-wrap h3{font-size:16px; font-weight:800; margin:22px 0 8px; color:var(--brick);}
+.notes-wrap p{margin:0 0 12px; font-size:14.5px;}
+.notes-wrap ul, .notes-wrap ol{margin:0 0 14px; padding-left:20px; font-size:14.5px;}
+.notes-wrap li{margin-bottom:6px;}
+.callout{
+  background:color-mix(in srgb, var(--moss) 12%, var(--surface));
+  border:1px solid color-mix(in srgb, var(--moss) 40%, var(--line));
+  border-left:4px solid var(--moss); border-radius:4px;
+  padding:12px 16px; font-size:13.5px; margin:14px 0;
+}
+.quote{
+  border-left:3px solid var(--line); padding:2px 0 2px 14px;
+  color:var(--ink-soft); font-size:13.5px; margin:10px 0;
+}
+table{width:100%; border-collapse:collapse; font-size:13px; margin:12px 0 18px;}
+th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); border-bottom:2px solid var(--ink); padding:6px 8px;}
+td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+.tw{overflow-x:auto; border:1px solid var(--line); border-radius:6px;}
+code{background:var(--surface-2); padding:1px 5px; border-radius:3px; font-family:ui-monospace,monospace; font-size:.92em;}
+.price-box{
+  background:var(--surface); border:1px solid var(--line); border-radius:6px;
+  padding:16px 18px; font-family:ui-monospace,monospace; font-size:13.5px; line-height:2; margin:12px 0;
+}
+.callout.warn{
+  background:color-mix(in srgb, var(--brick) 10%, var(--surface));
+  border-color:color-mix(in srgb, var(--brick) 40%, var(--line));
+  border-left-color:var(--brick);
+}
+.lede{color:var(--ink-soft); font-size:13.5px; margin-bottom:18px;}
+
+/* changelog */
+#view-changelog{overflow-y:auto; justify-content:center;}
+.changelog-wrap{max-width:760px; padding:36px 24px 80px; line-height:1.7; margin:0 auto; width:100%;}
+.log-entry{margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid var(--line);}
+.log-entry:last-child{border-bottom:none;}
+.log-date{font-size:16px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+.log-date .log-new{font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--brick); color:#fff;}
+.log-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px;}
+.log-item{font-size:13.5px; padding-left:16px; position:relative;}
+.log-item::before{content:"–"; position:absolute; left:0; color:var(--ink-soft);}
+.log-tags{display:inline-flex; gap:5px; flex-wrap:wrap; margin-left:6px; vertical-align:middle;}
+.log-tag{font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:999px; background:var(--surface-2); color:var(--moss); white-space:nowrap; display:inline-block;}
+
+/* workflow steps */
+.flow{display:flex; flex-direction:column; gap:0;}
+.step{display:grid; grid-template-columns:34px 1fr; gap:0;}
+.step .rail{position:relative;}
+.step .num{
+  font-size:12px; font-weight:800; color:var(--bg); background:var(--brick);
+  border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+}
+.step .stem{position:absolute; top:26px; bottom:-10px; left:12px; width:2px; background:var(--line);}
+.step:last-child .stem{display:none;}
+.step-body{padding:0 0 20px 14px;}
+.step-body .st-title{font-weight:800; font-size:14.5px; margin-bottom:3px;}
+.step-body .st-desc{font-size:13px; color:var(--ink-soft);}
+
+/* scope cards */
+.scope-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0;}
+@media (max-width:520px){.scope-grid{grid-template-columns:1fr;}}
+.scope-card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:13px 15px;}
+.scope-card .sc-title{font-weight:800; font-size:13.5px; margin-bottom:4px; color:var(--moss);}
+.scope-card .sc-desc{font-size:12.5px; color:var(--ink-soft);}
+
+.checklist{display:flex; flex-direction:column; gap:9px; margin:14px 0;}
+.check-item{display:grid; grid-template-columns:auto 1fr; gap:11px; background:var(--surface); border:1px solid var(--line); border-radius:7px; padding:12px 14px;}
+.check-item .ck-box{width:16px; height:16px; border:2px solid var(--ink-soft); border-radius:4px; margin-top:2px; flex:none;}
+.check-item .ck-title{font-weight:800; font-size:13.5px; margin-bottom:3px;}
+.check-item .ck-desc{font-size:12.5px; color:var(--ink-soft);}
+
+/* tools */
+.tool-card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:10px;}
+.tool-card .tc-head{display:flex; align-items:baseline; gap:8px; margin-bottom:5px; flex-wrap:wrap;}
+.tool-card .tc-name{font-weight:800; font-size:14.5px;}
+.tool-card .tc-tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-soft);}
+.tool-card .tc-tag.free{color:var(--moss);}
+.tool-card .tc-desc{font-size:13px; color:var(--ink);}
+.tool-card .tc-use{font-size:12px; color:var(--ink-soft); margin-top:6px; font-style:italic;}
+
+/* quiz */
+.quiz-controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center;}
+.chip{
+  font:inherit; font-size:12px; font-weight:700; cursor:pointer;
+  padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--ink-soft);
+}
+.chip.active{background:var(--moss); border-color:var(--moss); color:var(--bg);}
+.shuffle-btn{
+  font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; margin-left:auto;
+  padding:7px 14px; border-radius:6px; border:1px solid var(--brick); background:var(--brick); color:#fff;
+}
+.q-card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-bottom:12px;}
+.q-card .q-cat{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--brick); margin-bottom:6px;}
+.q-card .q-text{font-size:14.5px; font-weight:700; margin-bottom:10px;}
+.reveal-btn{
+  font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
+  padding:7px 13px; border-radius:6px; border:1px solid var(--moss); background:transparent; color:var(--moss);
+}
+.answer-box{
+  display:none; margin-top:12px; padding:11px 14px; border-radius:6px;
+  background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--moss);
+}
+.answer-box.shown{display:block;}
+.answer-box .a-val{font-weight:800; font-size:14px; margin-bottom:4px; font-family:ui-monospace,monospace;}
+.answer-box .a-explain{font-size:12.5px; color:var(--ink-soft);}
+
+/* calculator */
+.calc-card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:14px;}
+.calc-card h3{margin:0 0 3px;}
+.calc-card .card-note{font-size:12px; color:var(--ink-soft); margin:0 0 14px;}
+.field-row{display:flex; gap:10px; margin-bottom:12px; align-items:flex-end; flex-wrap:wrap;}
+.field{flex:1; min-width:100px;}
+.field label{display:block; font-size:11px; color:var(--ink-soft); font-weight:700; margin-bottom:5px;}
+.field .unit{font-size:10.5px; color:var(--ink-soft); font-weight:400;}
+input[type="number"]{
+  width:100%; font:inherit; font-size:17px; padding:10px 11px;
+  border:1.5px solid var(--line); border-radius:7px; background:var(--bg); color:var(--ink);
+  font-family:ui-monospace,monospace; font-variant-numeric:tabular-nums;
+}
+input:focus{outline:2px solid var(--brick); outline-offset:1px; border-color:var(--brick);}
+.op{font-size:17px; color:var(--ink-soft); padding-bottom:11px; flex:none;}
+.mode-toggle{display:flex; gap:6px; margin-bottom:14px;}
+.mode-btn{
+  flex:1; font:inherit; font-size:12px; font-weight:700; cursor:pointer;
+  padding:7px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--ink-soft);
+}
+.mode-btn.active{background:var(--moss); color:var(--bg); border-color:var(--moss);}
+.result{background:var(--ink); color:var(--bg); border-radius:8px; padding:14px 16px; margin-top:4px;}
+.result .r-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; opacity:.65; margin-bottom:4px;}
+.result .r-value{font-size:clamp(22px,6vw,28px); font-weight:800; font-family:ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+.result .r-value .unit{font-size:14px; font-weight:600; opacity:.75; margin-left:4px;}
+.result .r-sub{font-size:11.5px; opacity:.7; margin-top:5px;}
+.result-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:420px){.result-grid{grid-template-columns:1fr;}}
+.calc-trick{
+  background:color-mix(in srgb, var(--moss) 10%, var(--surface-2));
+  border:1px solid color-mix(in srgb, var(--moss) 35%, var(--line));
+  border-left:3px solid var(--moss); border-radius:5px;
+  padding:9px 12px; font-size:12px; margin-top:11px; color:var(--ink);
+}
+.calc-trick b{color:var(--moss);}
+
+/* embedded diagram cards */
+.diagram-card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:14px; overflow-x:auto;}
+.diagram-card .dc-title{font-weight:800; font-size:13px; margin-bottom:8px; color:var(--brick);}
+.diagram-card svg{width:100%; height:auto; display:block; max-width:520px; margin:0 auto; background:#EDF0F3; border-radius:4px;}
+details.diagram-toggle{margin-bottom:14px;}
+details.diagram-toggle summary{
+  cursor:pointer; font-weight:800; font-size:13.5px; color:var(--brick);
+  padding:10px 14px; background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  list-style:none;
+}
+details.diagram-toggle summary::-webkit-details-marker{display:none;}
+details.diagram-toggle summary::before{content:"▸ "; }
+details.diagram-toggle[open] summary::before{content:"▾ "; }
+details.diagram-toggle[open] summary{border-radius:8px 8px 0 0; border-bottom:none;}
+details.diagram-toggle .diagram-card{margin-bottom:0; border-radius:0 0 8px 8px; border-top:none;}
+.tabs{flex-wrap:wrap; row-gap:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧱 岳父工程學徒</h1>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="gallery" id="galleryTabBtn">相簿</button>
+    <button class="tab-btn" data-view="changelog">更新日誌</button>
+    <button class="tab-btn" data-view="survey">丈量作業SOP</button>
+    <button class="tab-btn" data-view="calc">計算機</button>
+    <button class="tab-btn" data-view="flow">產業流程</button>
+    <button class="tab-btn" data-view="scope">岳父的範圍</button>
+    <button class="tab-btn" data-view="checklist">獨立作業清單</button>
+    <button class="tab-btn" data-view="walkthrough">新手總複習</button>
+    <button class="tab-btn" data-view="global">國際借鏡</button>
+    <button class="tab-btn" data-view="tools">AI工具箱</button>
+    <button class="tab-btn" data-view="quiz">每日題目</button>
+    <button class="tab-btn" data-view="notes">對話乾貨筆記</button>
+  </div>
+</header>
+
+<div id="view-gallery" class="view active">
+  <div class="legend">
+    <span><span class="dot g"></span>有官方證據</span>
+    <span><span class="dot y"></span>推論/部分確認</span>
+    <span><span class="dot n"></span>待確認</span>
+    <span style="margin-left:auto; color:var(--ink-soft);">往下滑看全部工地 ↓</span>
+  </div>
+  <div class="feed" id="feed"></div>
+</div>
+
+<!-- 新增更新時,把新的 .log-entry 加在這個區塊最上面(最新的在最前面) -->
+<div id="view-changelog" class="view">
+  <div class="changelog-wrap">
+    <h2 style="font-size:22px; font-weight:800; margin:0 0 6px;">更新日誌</h2>
+    <p class="lede">每次網頁有更新,都會記在這裡——改了什麼、在哪個頁籤看得到。</p>
+
+    <div class="log-entry">
+      <div class="log-date">2026/08/17 <span class="log-new">最新</span></div>
+      <ul class="log-list">
+        <li class="log-item">相簿排版改成「連續往下滑動」,不用再點選工地資料夾——16 個工地一次全部排好,手機看更順;手機上也支援左右滑動切換照片。<span class="log-tags"><span class="log-tag">相簿</span></span></li>
+      </ul>
+    </div>
+
+    <div class="log-entry">
+      <div class="log-date">2026/08/16(週日)</div>
+      <ul class="log-list">
+        <li class="log-item">把 08/15 跟岳父在台中車站、雲林肉品市場現場整理的完整筆記整合進網頁。<span class="log-tags"><span class="log-tag">丈量作業SOP</span><span class="log-tag">岳父的範圍</span></span></li>
+        <li class="log-item">新增監造(工地驗收)五階段檢查流程、現場糾錯「該說 vs 該讓」判斷框架、換磚SOP、梳齒咬合邊工法、中英菲三語工地詞彙表。<span class="log-tags"><span class="log-tag">丈量作業SOP</span></span></li>
+        <li class="log-item">計算機新增:圓形/扇形面積(岳父的算法:直徑×直徑×0.785)、體積換算(叫車估算用)、材料需求量計算(面積要用幾塊磚,含直線5-10%/弧形15-20%損耗抓法)、柱子間隔計算。<span class="log-tags"><span class="log-tag">計算機</span></span></li>
+        <li class="log-item">新增「出題練習」功能,可以無限次生成新的計算題目自己練習,每題附口訣。<span class="log-tags"><span class="log-tag">計算機</span></span></li>
+        <li class="log-item">補上真實的三層分包費率(報價300元/㎡ → 分包60~120元/㎡)、「商業登記」不等於「營造業登記」的合規提醒。<span class="log-tags"><span class="log-tag">獨立作業清單</span></span></li>
+        <li class="log-item">完整作品案例清單整理進頁面。<span class="log-tags"><span class="log-tag">岳父的範圍</span></span></li>
+        <li class="log-item">整個專案資料夾多備份一份到私人 GitHub 倉庫,萬一哪天網頁掛了也有備份。</li>
+      </ul>
+    </div>
+
+    <div class="log-entry">
+      <div class="log-date">2026/08/15(週六)</div>
+      <ul class="log-list">
+        <li class="log-item">把岳父傳來的 6 張教學圖卡(丈量流程、草圖畫法、瑕疵檢查、收工SOP等)整理成全新的「丈量作業SOP」頁籤。<span class="log-tags"><span class="log-tag">丈量作業SOP</span></span></li>
+        <li class="log-item">修好相簿在手機上瀏覽變慢的問題(照片壓縮、載入優化)。<span class="log-tags"><span class="log-tag">相簿</span></span></li>
+        <li class="log-item">新增手機上傳筆記/照片的管道(Google Drive 收件匣),之後岳父傳新資料可以直接處理進網頁。</li>
+        <li class="log-item">從新上傳的照片挖到一個新案場「雲林肉品市場」,第一次證實岳父有做植草磚工程(規模達千坪等級)。<span class="log-tags"><span class="log-tag">相簿</span><span class="log-tag">岳父的範圍</span></span></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div id="view-notes" class="view">
+  <div class="notes-wrap" id="notes-content">
+
+    <h2>跟岳父學景觀鋪面工程 — 從對話紀錄挖出的乾貨</h2>
+    <p>資料來源:與莊伯父的 LINE 對話紀錄(2025/11/18 ~ 2026/08/13)+ 189 張工地照片視覺分析。這份筆記只整理「已經確認」的東西,不靠猜。</p>
+
+    <h2>1. 先講最重要的一段對話:你已經拿到「入行邀請函」了</h2>
+    <p>2026/08/04 這天,你直接問岳父:「您做的這個工程,我這種門外漢學的來嗎」,他回:「可以。算、想、學。」隔天(08/05)你們就開始用實際案子(員林龍燈公園)一問一答討論施工順序。這不是空話,是他已經打開門讓你邊做邊問了,把握這個窗口期,問題盡量具體(見第 7 節)。</p>
+    <p>他也親口講了學習的三個階段:<b>估價(算)、現場操作(想/學)、管理</b>。跟你自己說的「下週開始週末過來幫忙,邊做邊學」對上了。</p>
+
+    <h2>2. 分包制度 — 這段你不是門外漢,這根本是你的本行</h2>
+    <p>2026/08/04 岳父解釋了「阿新/阿心」怎麼跟他配合,這段話直接翻譯成你熟悉的語言就懂了:</p>
+    <div class="quote">「阿心包數量,工人他請的,幫她先付薪水,從數量上扣回來。譬如說數量 $100,000,工人的錢用 $30,000,那就是給阿心 $70,000。」</div>
+    <p><b>拆解成公式:</b> 分包價($100,000) − 工人工資($30,000) = 阿心的利潤($70,000)</p>
+
+    <h3>對照你的人力仲介經驗</h3>
+    <div class="tw"><table>
+      <tr><th>景觀工程的角色</th><th>對照你熟悉的角色</th></tr>
+      <tr><td>業主(學校/車站/建商)</td><td>用人單位(工廠)</td></tr>
+      <tr><td>岳父(統包工程行)</td><td>仲介公司(你)</td></tr>
+      <tr><td>阿新/阿心(工頭/二手)</td><td>派遣站的班長/現場管理人</td></tr>
+      <tr><td>工人(領日薪1500)</td><td>外勞/派遣工</td></tr>
+      <tr><td>「數量」(按坪數/面積計價)</td><td>派遣費按人頭/按件計算</td></tr>
+      <tr><td>阿心的利潤=分包價−工資</td><td>仲介利潤=服務費−工人薪資成本</td></tr>
+    </table></div>
+    <p>這套「承包價減人力成本等於利潤」的邏輯,你每天在做仲介生意時就在算,只是換了單位(從「人頭」換成「坪數」)。<b>這是你切入這行最快的一個支點:別把它當新知識學,把它當「同一套邏輯換了計價單位」來套用。</b></p>
+
+    <h3>對照帶兵經驗</h3>
+    <p>把岳父想成「上級單位」,阿新/阿心是「班長」——上面給任務量(不是給天數,是給「這片地要鋪完」這個目標),班長自己去調度底下弟兄、控管進度、發餉,達標了上面不太管過程。岳父自己也講了:「訓練有素就不需要在我個人在那邊督陣」——這句話講的就是「帶得好的班,長官可以放手」。</p>
+
+    <h3>數量的計算單位</h3>
+    <p>「長1米寬1米等於1米平方」— 岳父強調「數量」就是<b>面積(平方公尺)</b>,不是件數也不是天數。這行計價的基本單位是 <code>m²</code>,換算時常用「坪」,1 坪 ≈ 3.3 m²。</p>
+
+    <h2>3. 報價公式 — 目前拿到的唯一一份「真實報價單」</h2>
+    <p>2026/08/07,你自己主動練習估價(一戶車道5-6戶的社區案),岳父直接回了完整報價結構,務必背起來:</p>
+    <div class="price-box">
+      舖設(鋪面施工)&nbsp;&nbsp;&nbsp;: $300 / m²<br>
+      路緣(邊界收邊)&nbsp;&nbsp;&nbsp;: $300 / 延米<br>
+      切割收邊(純代工): $250 / 延米(不含料)<br>
+      請款方式: 完工後現金付現
+    </div>
+    <h3>你當時的練習算法(岳父沒有否定,值得留著當範本)</h3>
+    <div class="price-box">
+      20 × 0.3 = 6 米(車道寬)<br>
+      20 × 0.3 = 6 米(車道長)<br>
+      6 × 6 = 36 m²(一戶車道面積)
+    </div>
+    <p>先數磚的塊數,再乘上單塊磚的邊長,不用捲尺量整片地也能抓出概略坪數。</p>
+    <h3>坪換算</h3>
+    <p>岳父示範:「面積 30 坪 × 3.3 = m²」→ 100 m²。記住這個係數 <b>3.3</b>。</p>
+    <h3>報價心法</h3>
+    <ol>
+      <li><b>「提供細部圖面估價會更精準」</b>— 沒有圖面只能抓概數,以後接案第一件事:先要圖面。</li>
+      <li><b>「有雛形可以判斷價格可以判斷施工的困難度,依著現場的困難度來報高低價」</b>— 單價表只是起點,實際報價要依現場難度往上調整,不是死套公式。</li>
+      <li><b>「案件報價完成簽約免今日後紛爭、錢收不回來」</b>+「接案不用急、清楚、穩健」— 別急著搶案子,把條件談清楚比速度重要。</li>
+    </ol>
+
+    <h2>4. 現場工法 SOP — 對話裡明確講出來的技術細節</h2>
+    <ul>
+      <li><b>弧形/圓形鋪面</b>:「圓從內而外」— 先做內圓,再往外擴。(2026/08/05,員林龍燈公園)</li>
+      <li><b>階梯施工</b>:「下而上」— 由下往上砌。(員林龍燈公園)</li>
+      <li><b>鐵籠/石籠護坡防鏽</b>:「渡鋅」(應為鍍鋅,鋅鍍層防鏽處理)。(2026/05/04)</li>
+      <li><b>鐵籠來源</b>:「代施工」— 外包給專門廠商施作/供應,不是自己現場土法製作。(2026/05/03)</li>
+      <li><b>石籠/景觀石作的價值定位</b>:「化腐朽為神奇、把石頭變成有價值的配角、真要幾分功力」— 石作景觀是高單價、講究美感判斷的工項,報價貴是因為需要「找對人施做」。(2026/05/02)</li>
+      <li><b>天氣與排程彈性</b>:不同工項對雨天的敏感度不同(室內/有遮蔽的車站案 vs 露天案),排程要跟著天氣彈性調整。(2026/07/27)</li>
+      <li><b>材料調度</b>:「軟站料不夠補料先做彰化」— 料不夠時不會讓工人閒著,先切去另一個有料的案場做,等補料再回頭。(2026/07/27)</li>
+    </ul>
+
+    <h2>5. 專有名詞總表</h2>
+    <div class="tw"><table>
+      <tr><th>詞</th><th>意思</th><th>好記的類比</th></tr>
+      <tr><td>數量</td><td>按面積(m²)計價的分包工程量</td><td>派遣費「按人頭計價」的景觀版,單位是坪數不是人數</td></tr>
+      <tr><td>工</td><td>一個工人做一天=1工(man-day)</td><td>軍中「一人日」的概念,算工資用</td></tr>
+      <tr><td>外叫</td><td>臨時調度外面的工人來支援</td><td>缺兵向友軍借調人力</td></tr>
+      <tr><td>代工施做</td><td>只出人力不出料的純工資分包</td><td>只派人不出裝備的支援任務</td></tr>
+      <tr><td>舖設</td><td>鋪面本體施工(鋪磚)</td><td>—</td></tr>
+      <tr><td>路緣</td><td>道路/鋪面的邊界收邊(緣石)</td><td>像隊伍的「排面」,把邊界收齊</td></tr>
+      <tr><td>切割收邊</td><td>轉角、異形收邊的切割修整</td><td>精修工序,難度高、單價高</td></tr>
+      <tr><td>坪</td><td>台灣慣用面積單位,1坪≈3.3m²</td><td>換算係數要背起來</td></tr>
+      <tr><td>圖面</td><td>施工/報價用的平面圖</td><td>報價的「作戰地圖」</td></tr>
+      <tr><td>雛形</td><td>初步草圖/概念圖</td><td>—</td></tr>
+      <tr><td>收尾</td><td>工程進入完工前的最後修整階段</td><td>—</td></tr>
+      <tr><td>護堤/護提景觀美化</td><td>河堤/邊坡的景觀化工程</td><td>—</td></tr>
+      <tr><td>石籠/蛇籠</td><td>鐵網籠裝填石塊,用於護坡擋土</td><td>—</td></tr>
+      <tr><td>鍍鋅(渡鋅)</td><td>金屬鍍鋅防鏽處理</td><td>—</td></tr>
+      <tr><td>洗石子</td><td>讓石粒外露的水泥表面工法,常用於景觀牆面</td><td>—</td></tr>
+    </table></div>
+
+    <h2>6. 岳父的經營哲學</h2>
+    <ul>
+      <li><b>案例行銷比開口推銷更有效</b>:「利用不會講話的工具來幫你賺很多錢,這才是高招」— 用實績照片/案例做行銷,勝過話術。你的仲介事業也直接用得上(工人推薦案例、雇主見證)。</li>
+      <li><b>客戶介紹客戶是最省力的通路</b>:做到後期靠口碑,不用再主動開發。</li>
+      <li><b>把壓力當養分</b>:「壓力就是助力啦,把困難當成吃補啊」— 這是他面對景氣波動、真的說服自己撐過淡季的心態。</li>
+    </ul>
+
+    <h2>7. 待確認清單 — 直接問岳父的問題</h2>
+    <p>照片分析挖出了比對話文字豐富很多的資訊(見「相簿」分頁各資料夾說明)——好幾張照片其實是聊天截圖或工地告示牌,直接拍到官方工程全名、承造商、地址。</p>
+    <h3>A. 對話文字裡的疑問</h3>
+    <ol>
+      <li>「阿里山住山車站」(2025/11/19)— 這是工程案場,還是私人旅遊照?</li>
+      <li>「別墅3500w」「15F」(2026/07/27)— 是指工程總價3500萬嗎?「15F」是樓層數還是別的代號?</li>
+      <li>「切割收邊$250/延米(純屬代工施做)」— 這個單價只包切割工資、料另計嗎?舖設$300/m²是否含料?</li>
+      <li>報價付款節奏 — 「完工現金付現」是全額,還是有分期(訂金/期款)?大案子也是這樣收嗎?</li>
+    </ol>
+    <h3>B. 照片分類時發現的疑問(最重要)</h3>
+    <div class="callout">
+      ✅ 已確認(2026/08/13):公司登記地址已跟岳父確認過(此處基於隱私不公開)。<b>大台中轉運中心</b>與<b>台中火車站轉運中心</b>是同一個標案、同一個承造商,兩個資料夾已合併為一。
+    </div>
+    <ol start="5">
+      <li><b>官田大內學甲一帶</b>:同一批圓弧廣場照片,案名對不上(大內青果市場 vs 學甲區二溪鎮公園)。這批照片實際是哪個案子?這段期間是不是同時在做好幾個公所發包的小案?怎麼安排工人調度?</li>
+      <li><b>「宏海御邸」vs「宏海塱墅」</b>:案名很像但不同字,是同一建案的不同棟、還是完全不同兩個業主?</li>
+      <li><b>長期配合的營造廠業務往來</b>:某個標案邀約後來有接嗎?報價後多久會知道有沒有中?跟長期配合的營造廠通常怎麼談分包價?</li>
+      <li><b>未分類照片(17張)</b>:能不能挑幾張讓岳父直接認一下是哪個案子?</li>
+      <li><b>觀景台工程</b>:這是哪裡的案子?這種特殊構造物報價邏輯跟一般連鎖磚案有什麼不一樣?</li>
+    </ol>
+
+    <div class="callout">完整版整理(含逐張照片分析)存在專案資料夾 <code>notes/</code> 底下:<code>learning_notes.md</code>、<code>photo_classification.md</code>、<code>chat_batch_table.md</code>。</div>
+
+  </div>
+</div>
+
+<!-- ===== 丈量作業SOP ===== -->
+<div id="view-survey" class="view">
+  <div class="notes-wrap">
+    <h2>丈量作業SOP:台中車站 收尾丈量</h2>
+    <p class="lede">07:15 到場(約定07:30,提早15分)。目標:數字準、照片全、一次到位。這是把六份現場筆記合併成一份,照實際流程順序排。下面先放六張原始圖卡(點開看圖),下面文字版是同樣內容的整理稿。</p>
+
+    <details class="diagram-toggle">
+      <summary>圖卡①明日任務卡</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1760" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs><marker id="ta" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker></defs>
+          <rect width="800" height="1760" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="70" fill="#1B2A38"/>
+          <text x="52" y="58" font-size="23" font-weight="700" fill="#F6F8F9" letter-spacing="2">明日任務卡｜台中車站 收尾丈量</text>
+          <text x="52" y="82" font-size="13" fill="#C3CDD6">07:15 到場（約定07:30，早15分鐘）｜ 目標：數字準、照片全、一次到位</text>
+          <g transform="translate(0,116)">
+            <rect x="30" y="0" width="740" height="150" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="120" height="34" fill="#B4531F"/>
+            <text x="90" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">今晚就做</text>
+            <text x="56" y="62" font-size="14" fill="#1B2A38">☐ 傳確認訊息：<tspan font-weight="700">「伯父，明天量收尾那段的切割線對嗎？人孔樹穴周邊要不要一起？」</tspan></text>
+            <text x="56" y="90" font-size="14" fill="#1B2A38">☐ 裝備：輪尺（先確認單位是公尺）、捲尺5m、粉筆、筆記本＋筆、手機充飽＋行動電源</text>
+            <text x="56" y="118" font-size="14" fill="#1B2A38">☐ 水、帽子、好走的鞋。早點睡。</text>
+          </g>
+          <g transform="translate(0,286)">
+            <rect x="30" y="0" width="740" height="330" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="120" height="34" fill="#1B2A38"/>
+            <text x="90" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">現場流程</text>
+            <g transform="translate(56,58)">
+              <rect x="0" y="0" width="30" height="30" fill="#1B2A38"/>
+              <text x="15" y="21" font-size="16" font-weight="700" fill="#F6F8F9" text-anchor="middle">1</text>
+              <text x="44" y="14" font-size="15" font-weight="700" fill="#1B2A38">到場先打招呼、再確認範圍（5分鐘）</text>
+              <text x="44" y="36" font-size="13" fill="#4A5C6A">「伯父早。我今天量的範圍你帶我看一下，從哪裡到哪裡。」——讓他指，你聽。</text>
+            </g>
+            <g transform="translate(56,120)">
+              <rect x="0" y="0" width="30" height="30" fill="#1B2A38"/>
+              <text x="15" y="21" font-size="16" font-weight="700" fill="#F6F8F9" text-anchor="middle">2</text>
+              <text x="44" y="14" font-size="15" font-weight="700" fill="#1B2A38">走一遍、畫草圖（15分鐘）</text>
+              <text x="44" y="36" font-size="13" fill="#4A5C6A">沿著要量的線走一遍，筆記本畫出形狀、分段編號（①②③…）、標出人孔樹穴位置。</text>
+              <text x="44" y="56" font-size="13" fill="#B4531F" font-weight="700">先分段再量。長線切成幾段，每段一個數字，出錯只重量一段。</text>
+            </g>
+            <g transform="translate(56,204)">
+              <rect x="0" y="0" width="30" height="30" fill="#1B2A38"/>
+              <text x="15" y="21" font-size="16" font-weight="700" fill="#F6F8F9" text-anchor="middle">3</text>
+              <text x="44" y="14" font-size="15" font-weight="700" fill="#1B2A38">照節奏量（主要時間）</text>
+              <text x="44" y="40" font-size="14" font-weight="700" fill="#B4531F">歸零 → 對起點 → 推 → 停 → 拍讀數 → 拍全景 → 寫草圖 → 才歸零</text>
+              <text x="44" y="62" font-size="13" fill="#4A5C6A">每一段一模一樣的動作。固定節奏＝老手的樣子。</text>
+              <text x="44" y="84" font-size="13" fill="#4A5C6A">弧線沿著弧線推（輪尺強項）。人孔樹穴用捲尺，量周長、數幾處、各拍一張。</text>
+            </g>
+          </g>
+          <g transform="translate(0,636)">
+            <rect x="30" y="0" width="740" height="170" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="120" height="34" fill="#1B2A38"/>
+            <text x="90" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">拍照規則</text>
+            <text x="56" y="62" font-size="14" fill="#1B2A38">每段兩張：<tspan font-weight="700">① 輪尺讀數特寫</tspan>（數字要能放大看清）　<tspan font-weight="700">② 該段全景</tspan>（看得出起訖點）</text>
+            <text x="56" y="90" font-size="14" fill="#1B2A38">拍完立刻在草圖寫：<tspan font-family="monospace" font-weight="700">段① 12.6M</tspan>　照片和數字要對得起來。</text>
+            <text x="56" y="118" font-size="14" fill="#B4531F" font-weight="700">鐵律：沒拍照之前，不准歸零。</text>
+            <text x="56" y="146" font-size="13" fill="#4A5C6A">這些照片＝岳父跟營造廠對數量的證據。你手上的輪尺直接連著他的請款單。</text>
+          </g>
+          <g transform="translate(0,826)">
+            <rect x="30" y="0" width="740" height="210" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="120" height="34" fill="#B4531F"/>
+            <text x="90" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">順路看瑕疵</text>
+            <text x="56" y="62" font-size="14" fill="#1B2A38">量線的沿路順便看，蹲低、逆著光。六樣：</text>
+            <text x="56" y="90" font-size="14" fill="#1B2A38"><tspan font-weight="700">段差</tspan>（磚高低不平）　<tspan font-weight="700">崩角</tspan>（切割區最多）　<tspan font-weight="700">勾縫</tspan>（沒填滿/裂）</text>
+            <text x="56" y="116" font-size="14" fill="#1B2A38"><tspan font-weight="700">污染</tspan>（水泥漬）　<tspan font-weight="700">空心</tspan>（指節敲，聲音悶）　<tspan font-weight="700">積水痕</tspan>（低窪水漬圈）</text>
+            <text x="56" y="146" font-size="14" fill="#B4531F" font-weight="700">每處：粉筆圈 → 拍特寫 → 拍位置全景 → 草圖標編號。</text>
+            <text x="56" y="176" font-size="13" fill="#1B2A38">最後站遠10米、蹲低、順著弧線方向看整條線順不順（他交代的「弧度要漂亮」）。</text>
+            <text x="56" y="196" font-size="13" fill="#4A5C6A">現場只記錄、不批評。回傳給岳父決定——用他的權威，不是你的。</text>
+          </g>
+          <g transform="translate(0,1056)">
+            <rect x="30" y="0" width="740" height="290" fill="#1B2A38"/>
+            <text x="52" y="36" font-size="16" font-weight="700" fill="#F6F8F9">看起來老練的七個細節</text>
+            <text x="52" y="72" font-size="13.5" fill="#C3CDD6">① <tspan fill="#F6F8F9" font-weight="700">動作節奏固定</tspan>——每段同一套流程，不慌不亂，這比任何技術都像老手。</text>
+            <text x="52" y="102" font-size="13.5" fill="#C3CDD6">② <tspan fill="#F6F8F9" font-weight="700">數字唸出來再寫</tspan>——「段一、十二點六米」，唸一次不會抄錯。</text>
+            <text x="52" y="132" font-size="13.5" fill="#C3CDD6">③ <tspan fill="#F6F8F9" font-weight="700">可疑就重量一次</tspan>——同一段量兩次差超過0.2M，量第三次取多數。</text>
+            <text x="52" y="162" font-size="13.5" fill="#C3CDD6">④ <tspan fill="#F6F8F9" font-weight="700">不擋工班動線</tspan>——人家在做收尾，你量你的，眼睛看路。</text>
+            <text x="52" y="192" font-size="13.5" fill="#C3CDD6">⑤ <tspan fill="#F6F8F9" font-weight="700">問問題問得準</tspan>——「這段人孔算切割嗎？」比「我要怎麼量」高一個檔次。</text>
+            <text x="52" y="222" font-size="13.5" fill="#C3CDD6">⑥ <tspan fill="#F6F8F9" font-weight="700">中午前傳進度</tspan>——「量一半了，目前XX米」，他不用問你就先報。</text>
+            <text x="52" y="252" font-size="13.5" fill="#C3CDD6">⑦ <tspan fill="#F6F8F9" font-weight="700">收工前跟他核對範圍</tspan>——「我量的是這幾段，有沒有漏的？」讓他點頭才離場。</text>
+          </g>
+          <g transform="translate(0,1366)">
+            <rect x="30" y="0" width="740" height="290" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="120" height="34" fill="#1B2A38"/>
+            <text x="90" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">回傳格式</text>
+            <rect x="56" y="52" width="688" height="200" fill="#FFFDF6" stroke="#C9B98A"/>
+            <text x="76" y="82" font-size="13.5" fill="#1B2A38" font-family="monospace" font-weight="700">台中車站 收尾切割丈量 8/16</text>
+            <text x="76" y="110" font-size="13.5" fill="#1B2A38" font-family="monospace">段① 弧形收邊（東側） 12.6M</text>
+            <text x="76" y="134" font-size="13.5" fill="#1B2A38" font-family="monospace">段② 弧形收邊（西側） 11.8M</text>
+            <text x="76" y="158" font-size="13.5" fill="#1B2A38" font-family="monospace">人孔 4處 各約2.4M ／ 樹穴 6處</text>
+            <text x="76" y="182" font-size="13.5" fill="#1B2A38" font-family="monospace" font-weight="700">合計 XX.X M</text>
+            <text x="76" y="210" font-size="13.5" fill="#1B2A38" font-family="monospace">瑕疵 3處（照片附後）：①A區崩角 ②…</text>
+            <text x="76" y="234" font-size="13.5" fill="#1B2A38" font-family="monospace">弧度目視OK ／ 第X段建議看一下</text>
+            <text x="56" y="278" font-size="13" fill="#B4531F" font-weight="700">照片＋草圖先傳給Claude整理成這個格式，再回傳岳父。文字在前、照片在後。</text>
+          </g>
+          <text x="30" y="1730" font-size="13" fill="#4A5C6A">＊ 準比快重要。第一次做，寧可慢十分鐘，不要錯一個數字。</text>
+        </svg>
+      </div>
+    </details>
+
+    <details class="diagram-toggle">
+      <summary>圖卡②草圖怎麼畫</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1340" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs><marker id="ga" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker></defs>
+          <rect width="800" height="1340" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="66" fill="#1B2A38"/>
+          <text x="52" y="56" font-size="22" font-weight="700" fill="#F6F8F9" letter-spacing="1">草圖怎麼畫</text>
+          <text x="52" y="80" font-size="13" fill="#C3CDD6">一頁看全貌｜參照物代替北方｜數字寫在編號旁</text>
+          <g transform="translate(0,116)">
+            <rect x="30" y="0" width="740" height="300" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#1B2A38"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">1</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#1B2A38">畫多大　<tspan font-size="13" font-weight="400" fill="#4A5C6A">寧可小而完整，不要大而破碎</tspan></text>
+            <rect x="80" y="70" width="200" height="150" fill="#FFFDF6" stroke="#2E7D74" stroke-width="2"/>
+            <path d="M110,180 C150,150 200,140 250,110" stroke="#B4531F" stroke-width="2.5" fill="none"/>
+            <circle cx="140" cy="166" r="9" fill="none" stroke="#1B2A38" stroke-width="1.5"/>
+            <text x="140" y="171" font-size="10" fill="#1B2A38" text-anchor="middle">①</text>
+            <circle cx="200" cy="146" r="9" fill="none" stroke="#1B2A38" stroke-width="1.5"/>
+            <text x="200" y="151" font-size="10" fill="#1B2A38" text-anchor="middle">②</text>
+            <text x="180" y="248" font-size="13" font-weight="700" fill="#2E7D74" text-anchor="middle">✓ 一頁裝下整條線</text>
+            <text x="180" y="268" font-size="12" fill="#4A5C6A" text-anchor="middle">小一點沒關係，關係看得出來</text>
+            <rect x="440" y="70" width="95" height="150" fill="#FFFDF6" stroke="#B4531F" stroke-width="2"/>
+            <path d="M460,180 C480,160 510,150 535,140" stroke="#B4531F" stroke-width="2.5" fill="none"/>
+            <rect x="545" y="70" width="95" height="150" fill="#FFFDF6" stroke="#B4531F" stroke-width="2"/>
+            <path d="M545,140 C570,128 600,115 620,100" stroke="#B4531F" stroke-width="2.5" fill="none"/>
+            <text x="540" y="248" font-size="13" font-weight="700" fill="#B4531F" text-anchor="middle">✗ 畫太大被切成兩頁</text>
+            <text x="540" y="268" font-size="12" fill="#4A5C6A" text-anchor="middle">接不起來、數字對不上</text>
+            <text x="94" y="292" font-size="13" fill="#1B2A38">筆記本直的裝不下 → <tspan font-weight="700">橫過來畫</tspan>。草圖是位置索引，數字才是主角。</text>
+          </g>
+          <g transform="translate(0,436)">
+            <rect x="30" y="0" width="740" height="330" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#1B2A38"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">2</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#1B2A38">場地太大才分張　<tspan font-size="13" font-weight="400" fill="#4A5C6A">先試一頁，真的不行照這套</tspan></text>
+            <rect x="80" y="70" width="180" height="130" fill="#FFFDF6" stroke="#C9B98A" stroke-width="2"/>
+            <text x="96" y="94" font-size="12" font-weight="700" fill="#5A4A2A">第1頁：總圖</text>
+            <rect x="100" y="106" width="60" height="70" fill="none" stroke="#4A5C6A" stroke-width="1.5"/>
+            <text x="130" y="146" font-size="13" font-weight="700" fill="#1B2A38" text-anchor="middle">A區</text>
+            <rect x="164" y="106" width="76" height="70" fill="none" stroke="#4A5C6A" stroke-width="1.5"/>
+            <text x="202" y="146" font-size="13" font-weight="700" fill="#1B2A38" text-anchor="middle">B區</text>
+            <text x="170" y="222" font-size="11" fill="#4A5C6A" text-anchor="middle">只畫外框和分區，不放數字</text>
+            <path d="M276,135 L316,135" stroke="#B4531F" stroke-width="2" marker-end="url(#ga)"/>
+            <rect x="330" y="70" width="180" height="130" fill="#FFFDF6" stroke="#C9B98A" stroke-width="2"/>
+            <text x="346" y="94" font-size="12" font-weight="700" fill="#5A4A2A">第2頁：A區詳圖</text>
+            <text x="486" y="92" font-size="10" fill="#8A7A4A" text-anchor="end">A區 1/2</text>
+            <path d="M356,180 C400,150 440,140 490,116" stroke="#B4531F" stroke-width="2.5" fill="none"/>
+            <text x="400" y="150" font-size="11" font-weight="700" fill="#B4531F">① 12.6M</text>
+            <rect x="530" y="70" width="180" height="130" fill="#FFFDF6" stroke="#C9B98A" stroke-width="2"/>
+            <text x="546" y="94" font-size="12" font-weight="700" fill="#5A4A2A">第3頁：B區詳圖</text>
+            <text x="686" y="92" font-size="10" fill="#8A7A4A" text-anchor="end">B區 2/2</text>
+            <path d="M556,170 C610,150 650,130 690,120" stroke="#B4531F" stroke-width="2.5" fill="none"/>
+            <text x="600" y="142" font-size="11" font-weight="700" fill="#B4531F">③ 9.2M</text>
+            <text x="94" y="240" font-size="14" fill="#1B2A38">・<tspan font-weight="700">總圖是靈魂</tspan>——有它，詳圖之間的關係才接得起來</text>
+            <text x="94" y="268" font-size="14" fill="#1B2A38">・每頁右上角寫頁碼「A區 1/2」</text>
+            <text x="94" y="296" font-size="14" fill="#1B2A38">・數字只寫在詳圖，總圖保持乾淨</text>
+            <text x="94" y="322" font-size="13" fill="#2E7D74" font-weight="700">明天的收尾切割線，大概率一頁就夠。</text>
+          </g>
+          <g transform="translate(0,786)">
+            <rect x="30" y="0" width="740" height="330" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#1B2A38"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">3</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#1B2A38">不用朝北　<tspan font-size="13" font-weight="400" fill="#4A5C6A">用現場認得出的東西標方向</tspan></text>
+            <rect x="120" y="70" width="380" height="200" fill="#FFFDF6" stroke="#C9B98A" stroke-width="2"/>
+            <text x="310" y="62" font-size="13" font-weight="700" fill="#2E7D74" text-anchor="middle">↑ 往台中車站月台</text>
+            <text x="104" y="175" font-size="13" font-weight="700" fill="#2E7D74" text-anchor="end">← 建國路出口</text>
+            <text x="310" y="290" font-size="13" font-weight="700" fill="#2E7D74" text-anchor="middle">這邊是圍籬 ▼</text>
+            <path d="M160,230 C240,200 320,180 460,130" stroke="#B4531F" stroke-width="3" fill="none"/>
+            <circle cx="230" cy="207" r="11" fill="none" stroke="#1B2A38" stroke-width="1.5"/>
+            <text x="230" y="212" font-size="11" fill="#1B2A38" text-anchor="middle">①</text>
+            <circle cx="370" cy="168" r="11" fill="none" stroke="#1B2A38" stroke-width="1.5"/>
+            <text x="370" y="173" font-size="11" fill="#1B2A38" text-anchor="middle">②</text>
+            <rect x="400" y="200" width="24" height="18" fill="none" stroke="#2E7D74" stroke-width="1.5"/>
+            <text x="412" y="213" font-size="9" fill="#2E7D74" text-anchor="middle">孔A</text>
+            <text x="540" y="100" font-size="14" fill="#1B2A38">拿著圖站在現場，</text>
+            <text x="540" y="124" font-size="14" fill="#1B2A38">兩秒對出方向。</text>
+            <text x="540" y="160" font-size="13" fill="#4A5C6A">沒有人在工地看北方，</text>
+            <text x="540" y="182" font-size="13" fill="#4A5C6A">大家看的是月台、出口、</text>
+            <text x="540" y="204" font-size="13" fill="#4A5C6A">圍籬在哪邊。</text>
+            <rect x="94" y="290" width="650" height="32" fill="#FBF3EC" stroke="#B4531F"/>
+            <text x="114" y="311" font-size="13" font-weight="700" fill="#B4531F">唯一的規則：一張圖裡方向要一致。決定了上方是哪邊，整張照著畫，中途不轉。</text>
+          </g>
+          <g transform="translate(0,1136)">
+            <rect x="30" y="0" width="740" height="160" fill="#1B2A38"/>
+            <text x="52" y="36" font-size="16" font-weight="700" fill="#F6F8F9">最後兩件事</text>
+            <text x="52" y="72" font-size="14" fill="#C3CDD6">・畫完草圖<tspan fill="#F6F8F9" font-weight="700">先拍一張存手機</tspan>——筆記本弄髒、淋濕、忘在車上，你還有備份。</text>
+            <text x="52" y="104" font-size="14" fill="#C3CDD6">・收工前拿草圖給岳父看：<tspan fill="#F6F8F9" font-weight="700">「我量的是這幾段，有沒有漏？」</tspan>他點頭才離場。</text>
+            <text x="52" y="140" font-size="13" fill="#E08A4E" font-weight="700">草圖醜沒關係。三天後還看得懂哪個數字是哪一段，就是好圖。</text>
+          </g>
+        </svg>
+      </div>
+    </details>
+
+    <details class="diagram-toggle">
+      <summary>圖卡③草圖示範</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1100" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs><marker id="sa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker></defs>
+          <rect width="800" height="1100" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="62" fill="none" stroke="#1B2A38" stroke-width="2"/>
+          <text x="50" y="56" font-size="22" font-weight="700" fill="#1B2A38" letter-spacing="1">草圖長這樣就夠了</text>
+          <text x="50" y="76" font-size="13" fill="#4A5C6A">編號自己定，規則只有一條：從一個角落開始、順著同一個方向編</text>
+          <g transform="translate(0,110)">
+            <rect x="60" y="0" width="680" height="620" fill="#FFFDF6" stroke="#C9B98A" stroke-width="2"/>
+            <line x1="60" y1="46" x2="740" y2="46" stroke="#E4D9B8"/>
+            <text x="84" y="32" font-size="15" font-weight="700" fill="#5A4A2A">8/16 台中車站 收尾切割丈量</text>
+            <text x="600" y="32" font-size="12" fill="#8A7A4A">天氣：晴</text>
+            <path d="M130,120 L560,110 L580,300 C500,320 460,400 380,430 L150,440 Z" fill="none" stroke="#4A5C6A" stroke-width="2.2"/>
+            <text x="330" y="95" font-size="12" fill="#8A7A4A">（收尾區外框，大概畫就好）</text>
+            <path d="M150,435 C230,420 300,400 380,428" stroke="#B4531F" stroke-width="3.5" fill="none"/>
+            <path d="M380,428 C455,398 495,325 578,302" stroke="#B4531F" stroke-width="3.5" fill="none"/>
+            <path d="M560,112 L578,300" stroke="#B4531F" stroke-width="3.5" fill="none" stroke-dasharray="1 0"/>
+            <line x1="376" y1="416" x2="386" y2="440" stroke="#1B2A38" stroke-width="2.5"/>
+            <line x1="570" y1="296" x2="588" y2="306" stroke="#1B2A38" stroke-width="2.5"/>
+            <line x1="146" y1="424" x2="156" y2="446" stroke="#1B2A38" stroke-width="2.5"/>
+            <line x1="552" y1="108" x2="568" y2="116" stroke="#1B2A38" stroke-width="2.5"/>
+            <circle cx="151" cy="435" r="7" fill="#B4531F"/>
+            <text x="120" y="465" font-size="13" font-weight="700" fill="#B4531F">起點★</text>
+            <text x="102" y="483" font-size="11" fill="#8A7A4A">（西南角開始）</text>
+            <circle cx="262" cy="392" r="16" fill="#FFFDF6" stroke="#1B2A38" stroke-width="2"/>
+            <text x="262" y="398" font-size="15" font-weight="700" fill="#1B2A38" text-anchor="middle">①</text>
+            <text x="228" y="372" font-size="14" font-weight="700" fill="#B4531F" font-family="monospace">12.6M</text>
+            <circle cx="478" cy="380" r="16" fill="#FFFDF6" stroke="#1B2A38" stroke-width="2"/>
+            <text x="478" y="386" font-size="15" font-weight="700" fill="#1B2A38" text-anchor="middle">②</text>
+            <text x="498" y="368" font-size="14" font-weight="700" fill="#B4531F" font-family="monospace">15.3M</text>
+            <circle cx="600" cy="205" r="16" fill="#FFFDF6" stroke="#1B2A38" stroke-width="2"/>
+            <text x="600" y="211" font-size="15" font-weight="700" fill="#1B2A38" text-anchor="middle">③</text>
+            <text x="620" y="196" font-size="14" font-weight="700" fill="#B4531F" font-family="monospace">8.4M</text>
+            <path d="M200,455 C280,438 330,422 370,445" stroke="#8A7A4A" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#sa)"/>
+            <text x="250" y="474" font-size="11" fill="#8A7A4A">量的方向 →</text>
+            <rect x="250" y="180" width="26" height="26" fill="none" stroke="#2E7D74" stroke-width="2"/>
+            <text x="263" y="198" font-size="10" fill="#2E7D74" text-anchor="middle">孔A</text>
+            <rect x="420" y="160" width="26" height="26" fill="none" stroke="#2E7D74" stroke-width="2"/>
+            <text x="433" y="178" font-size="10" fill="#2E7D74" text-anchor="middle">孔B</text>
+            <circle cx="350" cy="250" r="15" fill="none" stroke="#2E7D74" stroke-width="2"/>
+            <text x="350" y="255" font-size="10" fill="#2E7D74" text-anchor="middle">樹1</text>
+            <circle cx="480" cy="240" r="15" fill="none" stroke="#2E7D74" stroke-width="2"/>
+            <text x="480" y="245" font-size="10" fill="#2E7D74" text-anchor="middle">樹2</text>
+            <text x="335" y="428" font-size="16" fill="#B4531F">✗</text>
+            <text x="352" y="430" font-size="11" fill="#B4531F">瑕1崩角</text>
+            <text x="520" y="342" font-size="16" fill="#B4531F">✗</text>
+            <text x="536" y="344" font-size="11" fill="#B4531F">瑕2縫裂</text>
+            <line x1="84" y1="520" x2="716" y2="520" stroke="#E4D9B8"/>
+            <text x="84" y="548" font-size="13" fill="#5A4A2A" font-family="monospace">① 12.6M　② 15.3M　③ 8.4M　合計 36.3M</text>
+            <text x="84" y="574" font-size="13" fill="#5A4A2A" font-family="monospace">孔A 2.4M　孔B 2.4M　樹1 1.9M　樹2 1.9M</text>
+            <text x="84" y="600" font-size="13" fill="#5A4A2A" font-family="monospace">瑕1 崩角(段①中段)　瑕2 縫裂(段②)　照片各2張</text>
+          </g>
+          <g transform="translate(0,760)">
+            <rect x="30" y="0" width="740" height="290" fill="#1B2A38"/>
+            <text x="52" y="36" font-size="16" font-weight="700" fill="#F6F8F9">編號規則（自己定，但要一致）</text>
+            <text x="52" y="74" font-size="13.5" fill="#C3CDD6">① <tspan fill="#F6F8F9" font-weight="700">起點自己選</tspan>——挑一個好記的角落（例：靠出口的西南角），畫★標記。</text>
+            <text x="52" y="104" font-size="13.5" fill="#C3CDD6">② <tspan fill="#F6F8F9" font-weight="700">順同一個方向編</tspan>——順時針或逆時針都行，中途不要換方向。</text>
+            <text x="52" y="134" font-size="13.5" fill="#C3CDD6">③ <tspan fill="#F6F8F9" font-weight="700">在哪斷段？</tspan>轉彎處、弧線起訖點、遇到人孔的地方——自然的斷點就是分段點，畫一短槓。</text>
+            <text x="52" y="164" font-size="13.5" fill="#C3CDD6">④ <tspan fill="#F6F8F9" font-weight="700">線用①②③，孔用孔A孔B，樹穴用樹1樹2，瑕疵用瑕1瑕2</tspan>——四種東西四套編號，不混用。</text>
+            <text x="52" y="194" font-size="13.5" fill="#C3CDD6">⑤ <tspan fill="#F6F8F9" font-weight="700">量完立刻把數字寫在編號旁邊</tspan>——圈圈旁邊就是它的米數。</text>
+            <text x="52" y="224" font-size="13.5" fill="#C3CDD6">⑥ <tspan fill="#F6F8F9" font-weight="700">照片檔名對編號</tspan>——拍完傳LINE給自己時打一句「段① 12.6」，晚上整理不會亂。</text>
+            <text x="52" y="262" font-size="13.5" fill="#E08A4E" font-weight="700">草圖醜沒關係。三天後還看得懂哪個數字是哪一段，就是好草圖。</text>
+          </g>
+          <text x="30" y="1080" font-size="13" fill="#4A5C6A">＊ 收工前拿這張草圖給岳父看一眼：「我量的是這幾段，有沒有漏？」讓他點頭才離場。</text>
+        </svg>
+      </div>
+    </details>
+
+    <details class="diagram-toggle">
+      <summary>圖卡④全景拍法</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 980" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs>
+            <pattern id="pav" width="26" height="14" patternUnits="userSpaceOnUse">
+              <rect width="26" height="14" fill="#DCE3E8"/>
+              <rect x="0" y="0" width="12.5" height="6.5" fill="#CBD5DC" stroke="#AEBCC6" stroke-width="0.6"/>
+              <rect x="13.5" y="0" width="12.5" height="6.5" fill="#D4DDE3" stroke="#AEBCC6" stroke-width="0.6"/>
+              <rect x="6.5" y="7.5" width="12.5" height="6.5" fill="#D4DDE3" stroke="#AEBCC6" stroke-width="0.6"/>
+            </pattern>
+            <marker id="pa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker>
+          </defs>
+          <rect width="800" height="980" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="62" fill="none" stroke="#1B2A38" stroke-width="2"/>
+          <text x="50" y="56" font-size="22" font-weight="700" fill="#1B2A38">全景怎麼拍</text>
+          <text x="50" y="76" font-size="13" fill="#4A5C6A">對——量完站在終點，回頭沿著線拍向起點。一張裡看到整段。</text>
+          <g transform="translate(0,110)">
+            <rect x="30" y="0" width="740" height="330" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="150" height="34" fill="#2E7D74"/>
+            <text x="105" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">✓ 這樣拍（俯視圖）</text>
+            <rect x="90" y="70" width="560" height="200" fill="url(#pav)" stroke="#AEBCC6"/>
+            <path d="M140,240 C260,200 420,190 560,120" stroke="#B4531F" stroke-width="4" fill="none"/>
+            <circle cx="140" cy="240" r="9" fill="#B4531F"/>
+            <text x="118" y="266" font-size="13" font-weight="700" fill="#B4531F">起點★</text>
+            <text x="108" y="284" font-size="11" fill="#4A5C6A">（放粉筆記號或水瓶當標記）</text>
+            <circle cx="560" cy="120" r="9" fill="#1B2A38"/>
+            <text x="576" y="112" font-size="13" font-weight="700" fill="#1B2A38">終點＝你站這</text>
+            <path d="M560,120 L200,180 L260,268 Z" fill="#2E7D74" opacity="0.14"/>
+            <path d="M560,120 L215,200" stroke="#2E7D74" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <path d="M560,120 L252,256" stroke="#2E7D74" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <text x="560" y="152" font-size="12" fill="#2E7D74" font-weight="700">📱 回頭拍向起點</text>
+            <text x="120" y="312" font-size="13" fill="#1B2A38">一張照片裡：<tspan font-weight="700">整條線 + 起點標記 + 周邊參照物</tspan>（人孔、花台、柱子）→ 誰看都知道量的是哪段。</text>
+          </g>
+          <g transform="translate(0,460)">
+            <rect x="30" y="0" width="740" height="300" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="150" height="34" fill="#1B2A38"/>
+            <text x="105" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">手機裡看到的</text>
+            <rect x="280" y="50" width="240" height="220" rx="10" fill="#DCE3E8" stroke="#1B2A38" stroke-width="3"/>
+            <path d="M300,250 L500,250 L440,90 L360,90 Z" fill="url(#pav)"/>
+            <path d="M310,248 C360,200 380,150 398,95" stroke="#B4531F" stroke-width="4" fill="none"/>
+            <circle cx="398" cy="95" r="5" fill="#B4531F"/>
+            <text x="398" y="84" font-size="10" fill="#B4531F" text-anchor="middle">遠處＝起點</text>
+            <text x="330" y="262" font-size="10" fill="#4A5C6A">近處＝腳邊終點</text>
+            <rect x="452" y="140" width="22" height="16" fill="none" stroke="#2E7D74" stroke-width="2"/>
+            <text x="463" y="170" font-size="9" fill="#2E7D74" text-anchor="middle">人孔入鏡</text>
+            <text x="70" y="90" font-size="13" fill="#1B2A38">・線從腳邊延伸到遠方</text>
+            <text x="70" y="118" font-size="13" fill="#1B2A38">・稍微蹲低一點拍，</text>
+            <text x="82" y="138" font-size="13" fill="#1B2A38">線的走向更清楚</text>
+            <text x="70" y="166" font-size="13" fill="#1B2A38">・橫的拍不下就改直拍</text>
+            <text x="545" y="90" font-size="13" fill="#1B2A38">・起點放個東西當記號</text>
+            <text x="557" y="110" font-size="12" fill="#4A5C6A">（粉筆畫★、放水瓶）</text>
+            <text x="545" y="140" font-size="13" fill="#1B2A38">・把固定物拍進去：</text>
+            <text x="557" y="160" font-size="12" fill="#4A5C6A">人孔、柱子、花台邊</text>
+            <text x="557" y="180" font-size="12" fill="#4A5C6A">→ 這就是位置證據</text>
+          </g>
+          <g transform="translate(0,780)">
+            <rect x="30" y="0" width="740" height="150" fill="#1B2A38"/>
+            <text x="52" y="34" font-size="15" font-weight="700" fill="#E08A4E">避免這三種拍法</text>
+            <text x="52" y="66" font-size="13.5" fill="#C3CDD6">✗ <tspan fill="#F6F8F9">垂直往下拍</tspan>——只看到幾片磚，看不出是哪一段、多長。</text>
+            <text x="52" y="96" font-size="13.5" fill="#C3CDD6">✗ <tspan fill="#F6F8F9">從側面橫著拍</tspan>——線變成一小截，前後不知延伸到哪。</text>
+            <text x="52" y="126" font-size="13.5" fill="#C3CDD6">✗ <tspan fill="#F6F8F9">拍太遠沒有參照物</tspan>——一片磚海，三天後自己都認不出位置。</text>
+          </g>
+          <text x="30" y="960" font-size="13" fill="#4A5C6A">＊ 太長一張裝不下的段：起點半段拍一張＋終點回拍一張，兩張都標同一個段號。</text>
+        </svg>
+      </div>
+    </details>
+
+    <details class="diagram-toggle">
+      <summary>圖卡⑤瑕疵檢查技巧</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1560" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs>
+            <pattern id="qv" width="26" height="14" patternUnits="userSpaceOnUse">
+              <rect width="26" height="14" fill="#DCE3E8"/>
+              <rect x="0" y="0" width="12.5" height="6.5" fill="#CBD5DC" stroke="#AEBCC6" stroke-width="0.6"/>
+              <rect x="13.5" y="0" width="12.5" height="6.5" fill="#D4DDE3" stroke="#AEBCC6" stroke-width="0.6"/>
+              <rect x="6.5" y="7.5" width="12.5" height="6.5" fill="#D4DDE3" stroke="#AEBCC6" stroke-width="0.6"/>
+            </pattern>
+            <marker id="qa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker>
+          </defs>
+          <rect width="800" height="1560" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="66" fill="#1B2A38"/>
+          <text x="52" y="56" font-size="22" font-weight="700" fill="#F6F8F9" letter-spacing="1">瑕疵檢查技巧</text>
+          <text x="52" y="80" font-size="13" fill="#C3CDD6">眼睛做九成，手只處理可疑處。不趴、不逐塊敲。</text>
+          <g transform="translate(0,116)">
+            <rect x="30" y="0" width="740" height="240" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="130" height="34" fill="#1B2A38"/>
+            <text x="95" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">基本節奏</text>
+            <g transform="translate(70,70)">
+              <circle cx="30" cy="20" r="9" fill="#4A5C6A"/>
+              <path d="M30,29 L30,62 M30,40 L14,54 M30,40 L46,52 M30,62 L16,92 M30,62 L44,92" stroke="#4A5C6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="30" y="116" font-size="12" fill="#4A5C6A" text-anchor="middle">慢走</text>
+              <path d="M70,55 L108,55" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <circle cx="150" cy="20" r="9" fill="#4A5C6A"/>
+              <path d="M150,29 L150,62 M150,40 L134,54 M150,40 L166,52 M150,62 L136,92 M150,62 L164,92" stroke="#4A5C6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="150" y="116" font-size="12" fill="#4A5C6A" text-anchor="middle">慢走</text>
+              <path d="M190,55 L228,55" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <circle cx="280" cy="42" r="9" fill="#B4531F"/>
+              <path d="M280,51 L278,70 M278,70 L260,76 M278,70 L294,78 M278,70 L266,94 L282,94 M278,70 L292,92" stroke="#B4531F" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M296,64 L360,58" stroke="#B4531F" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <text x="280" y="116" font-size="12" font-weight="700" fill="#B4531F" text-anchor="middle">蹲一下</text>
+              <text x="330" y="46" font-size="11" fill="#B4531F">視線貼地往前看</text>
+              <path d="M380,55 L418,55" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <circle cx="460" cy="20" r="9" fill="#4A5C6A"/>
+              <path d="M460,29 L460,62 M460,40 L444,54 M460,40 L476,52 M460,62 L446,92 M460,62 L474,92" stroke="#4A5C6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="460" y="116" font-size="12" fill="#4A5C6A" text-anchor="middle">慢走</text>
+              <text x="560" y="30" font-size="14" font-weight="700" fill="#1B2A38">每10來米蹲一次</text>
+              <text x="560" y="54" font-size="13" fill="#4A5C6A">蹲＝專門抓段差</text>
+              <text x="560" y="76" font-size="13" fill="#4A5C6A">逆著光蹲效果最好</text>
+              <text x="560" y="98" font-size="13" fill="#4A5C6A">（面向太陽方向看）</text>
+            </g>
+            <rect x="56" y="196" width="688" height="32" fill="#FBF3EC" stroke="#B4531F"/>
+            <text x="76" y="217" font-size="13" font-weight="700" fill="#B4531F">分兩趟：第一趟專心推輪尺（順眼掃），量完再專門走一趟找瑕疵（15–20分）。</text>
+          </g>
+          <g transform="translate(0,376)">
+            <rect x="30" y="0" width="740" height="360" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="130" height="34" fill="#1B2A38"/>
+            <text x="95" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">六樣分兩類</text>
+            <rect x="56" y="54" width="330" height="280" fill="#EFF5F3" stroke="#2E7D74" stroke-width="1.5"/>
+            <text x="76" y="84" font-size="15" font-weight="700" fill="#2E7D74">用走的就看得到（4樣）</text>
+            <text x="76" y="118" font-size="14" fill="#1B2A38">① <tspan font-weight="700">崩角</tspan> — 切割區的磚角缺一塊</text>
+            <text x="76" y="150" font-size="14" fill="#1B2A38">② <tspan font-weight="700">污染</tspan> — 磚面白灰色水泥漬</text>
+            <text x="76" y="182" font-size="14" fill="#1B2A38">③ <tspan font-weight="700">勾縫</tspan> — 縫沒填滿、有裂痕</text>
+            <text x="76" y="214" font-size="14" fill="#1B2A38">④ <tspan font-weight="700">積水痕</tspan> — 低窪處的水漬圈</text>
+            <text x="76" y="256" font-size="13" fill="#2E7D74">技巧：走得夠慢就會看到，</text>
+            <text x="76" y="278" font-size="13" fill="#2E7D74">眼睛掃前方2–3米的地面。</text>
+            <rect x="414" y="54" width="330" height="280" fill="#FBF3EC" stroke="#B4531F" stroke-width="1.5"/>
+            <text x="434" y="84" font-size="15" font-weight="700" fill="#B4531F">要蹲、要敲（2樣）</text>
+            <text x="434" y="118" font-size="14" fill="#1B2A38">⑤ <tspan font-weight="700">段差</tspan> — 蹲低、視線貼地、逆光看</text>
+            <text x="446" y="140" font-size="12" fill="#4A5C6A">凸起的磚會像小山跳出來</text>
+            <text x="434" y="174" font-size="14" fill="#1B2A38">⑥ <tspan font-weight="700">空心</tspan> — 只敲三種地方：</text>
+            <text x="446" y="200" font-size="13" fill="#1B2A38">・切割過的磚</text>
+            <text x="446" y="224" font-size="13" fill="#1B2A38">・邊緣、收邊附近</text>
+            <text x="446" y="248" font-size="13" fill="#1B2A38">・腳底踩到有翹動感的</text>
+            <text x="434" y="284" font-size="13" fill="#B4531F" font-weight="700">先敲一塊實心的當基準音：</text>
+            <text x="434" y="306" font-size="13" fill="#B4531F">實心「叩」短促　空心「咚」悶</text>
+          </g>
+          <g transform="translate(0,756)">
+            <rect x="30" y="0" width="740" height="260" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="170" height="34" fill="#1B2A38"/>
+            <text x="115" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">蹲低看段差（圖解）</text>
+            <g transform="translate(70,70)">
+              <circle cx="610" cy="20" r="16" fill="#E0B84E"/>
+              <path d="M594,28 L120,128" stroke="#E0B84E" stroke-width="1.5" stroke-dasharray="6 4"/>
+              <text x="610" y="52" font-size="11" fill="#8A7A4A" text-anchor="middle">太陽</text>
+              <line x1="0" y1="140" x2="560" y2="140" stroke="#7A8B99" stroke-width="2"/>
+              <rect x="60" y="132" width="60" height="8" fill="#CBD5DC" stroke="#AEBCC6"/>
+              <rect x="120" y="128" width="60" height="12" fill="#CBD5DC" stroke="#B4531F" stroke-width="2.5"/>
+              <rect x="180" y="132" width="60" height="8" fill="#CBD5DC" stroke="#AEBCC6"/>
+              <rect x="240" y="132" width="60" height="8" fill="#CBD5DC" stroke="#AEBCC6"/>
+              <rect x="104" y="137" width="16" height="3" fill="#4A5C6A" opacity="0.5"/>
+              <text x="150" y="116" font-size="12" font-weight="700" fill="#B4531F" text-anchor="middle">段差！有影子</text>
+              <circle cx="480" cy="96" r="9" fill="#4A5C6A"/>
+              <path d="M480,105 L477,124 M477,124 L460,130 M477,124 L492,132 M477,124 L464,148 L480,148 M477,124 L491,146" stroke="#4A5C6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M466,102 L200,132" stroke="#2E7D74" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <text x="480" y="170" font-size="12" fill="#4A5C6A" text-anchor="middle">蹲低、面向太陽方向看</text>
+              <text x="0" y="188" font-size="13" fill="#1B2A38">逆光時高差會投影——影子就是段差的自首書。順光看不到，逆光一目瞭然。</text>
+            </g>
+          </g>
+          <g transform="translate(0,1036)">
+            <rect x="30" y="0" width="740" height="180" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="130" height="34" fill="#B4531F"/>
+            <text x="95" y="23" font-size="15" font-weight="700" fill="#F6F8F9" text-anchor="middle">發現之後</text>
+            <g transform="translate(60,60)">
+              <rect x="0" y="0" width="130" height="60" fill="#1B2A38"/>
+              <text x="65" y="27" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">粉筆圈起來</text>
+              <text x="65" y="47" font-size="11" fill="#C3CDD6" text-anchor="middle">寫編號 瑕1</text>
+              <path d="M138,30 L168,30" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <rect x="176" y="0" width="130" height="60" fill="#1B2A38"/>
+              <text x="241" y="27" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">拍特寫</text>
+              <text x="241" y="47" font-size="11" fill="#C3CDD6" text-anchor="middle">手機貼低角度拍</text>
+              <path d="M314,30 L344,30" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <rect x="352" y="0" width="130" height="60" fill="#1B2A38"/>
+              <text x="417" y="27" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">拍位置全景</text>
+              <text x="417" y="47" font-size="11" fill="#C3CDD6" text-anchor="middle">帶到固定參照物</text>
+              <path d="M490,30 L520,30" stroke="#B4531F" stroke-width="2" marker-end="url(#qa)"/>
+              <rect x="528" y="0" width="130" height="60" fill="#1B2A38"/>
+              <text x="593" y="27" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">草圖標✗</text>
+              <text x="593" y="47" font-size="11" fill="#C3CDD6" text-anchor="middle">寫在段幾旁邊</text>
+            </g>
+            <text x="60" y="152" font-size="13" font-weight="700" fill="#B4531F">段差拍照訣竅：手機放低貼近地面拍——低角度照片裡高低差非常明顯，比文字有力一百倍。</text>
+          </g>
+          <g transform="translate(0,1236)">
+            <rect x="30" y="0" width="740" height="260" fill="#1B2A38"/>
+            <text x="52" y="38" font-size="16" font-weight="700" fill="#F6F8F9">最後一步＋現場守則</text>
+            <text x="52" y="76" font-size="14" fill="#C3CDD6">・全部看完 → <tspan fill="#F6F8F9" font-weight="700">站遠10米、蹲低、順著弧線方向看過去</tspan>（像瞄準）——</text>
+            <text x="68" y="100" font-size="14" fill="#C3CDD6">整條線順不順、有沒有折點，一眼就知道。他交代的「弧度要漂亮」就是驗這個。</text>
+            <text x="52" y="140" font-size="14" fill="#C3CDD6">・敲的時候<tspan fill="#F6F8F9" font-weight="700">動作輕、不張揚</tspan>——用指節或輪尺桿底輕點，不是拿東西大力敲。</text>
+            <text x="52" y="180" font-size="14" fill="#E08A4E" font-weight="700">・現場只記錄、不批評。不對工班說「這裡做壞了」。</text>
+            <text x="68" y="204" font-size="14" fill="#C3CDD6">拍下來、回傳岳父，讓他決定怎麼處理——用他的權威，不是你的。</text>
+            <text x="52" y="240" font-size="13" fill="#7A8B99">＊ 找到瑕疵不是找麻煩，是幫大家在監造來之前先過一遍。這是保護整個團隊。</text>
+          </g>
+        </svg>
+      </div>
+    </details>
+
+    <details class="diagram-toggle">
+      <summary>圖卡⑥收工後流程</summary>
+      <div class="diagram-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1420" font-family="'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif">
+          <defs>
+            <marker id="wa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#B4531F"/></marker>
+            <marker id="wf" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 z" fill="#4A5C6A"/></marker>
+          </defs>
+          <rect width="800" height="1420" fill="#EDF0F3"/>
+          <rect x="30" y="26" width="740" height="66" fill="#1B2A38"/>
+          <text x="52" y="56" font-size="22" font-weight="700" fill="#F6F8F9" letter-spacing="1">收工後流程｜資料 → Claude → 岳父</text>
+          <text x="52" y="80" font-size="13" fill="#C3CDD6">亂丟給Claude沒關係，整理是Claude的工作。給岳父的要是能直接轉傳的格式。</text>
+          <g transform="translate(0,116)">
+            <rect x="30" y="0" width="740" height="130" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="60" y="34" width="150" height="62" fill="#1B2A38"/>
+            <text x="135" y="60" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">① 收工</text>
+            <text x="135" y="82" font-size="11" fill="#C3CDD6" text-anchor="middle">草圖＋照片在手上</text>
+            <path d="M218,65 L252,65" stroke="#4A5C6A" stroke-width="2.5" marker-end="url(#wf)"/>
+            <rect x="260" y="34" width="150" height="62" fill="#1B2A38"/>
+            <text x="335" y="60" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">② 丟給Claude</text>
+            <text x="335" y="82" font-size="11" fill="#C3CDD6" text-anchor="middle">全部傳、不用挑</text>
+            <path d="M418,65 L452,65" stroke="#4A5C6A" stroke-width="2.5" marker-end="url(#wf)"/>
+            <rect x="460" y="34" width="150" height="62" fill="#1B2A38"/>
+            <text x="535" y="60" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">③ Claude整理</text>
+            <text x="535" y="82" font-size="11" fill="#C3CDD6" text-anchor="middle">核對→編排→產出</text>
+            <path d="M618,65 L652,65" stroke="#4A5C6A" stroke-width="2.5" marker-end="url(#wf)"/>
+            <rect x="660" y="34" width="90" height="62" fill="#B4531F"/>
+            <text x="705" y="60" font-size="14" font-weight="700" fill="#F6F8F9" text-anchor="middle">④ 傳岳父</text>
+            <text x="705" y="82" font-size="11" fill="#F6E3D5" text-anchor="middle">文字先、照片後</text>
+          </g>
+          <g transform="translate(0,266)">
+            <rect x="30" y="0" width="740" height="280" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#1B2A38"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">2</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#1B2A38">丟給Claude要傳三樣</text>
+            <text x="70" y="80" font-size="14" fill="#1B2A38">☐ <tspan font-weight="700">草圖照片</tspan>——每頁一張，拍正、光線夠</text>
+            <text x="70" y="112" font-size="14" fill="#1B2A38">☐ <tspan font-weight="700">全部現場照片</tspan>——讀數、全景、瑕疵，通通傳，分幾則訊息沒關係</text>
+            <text x="70" y="144" font-size="14" fill="#1B2A38">☐ <tspan font-weight="700">一段補充說明</tspan>——講照片看不出來的事：</text>
+            <rect x="90" y="164" width="640" height="92" fill="#FFFDF6" stroke="#C9B98A"/>
+            <text x="110" y="192" font-size="13" fill="#5A4A2A" font-family="monospace">「草圖1張。段①②③照片照順序傳。瑕疵3處在最後。</text>
+            <text x="110" y="216" font-size="13" fill="#5A4A2A" font-family="monospace">人孔那段伯父說不用量。</text>
+            <text x="110" y="240" font-size="13" fill="#5A4A2A" font-family="monospace">合計我自己加是36.3M，你幫我核一下。」</text>
+          </g>
+          <g transform="translate(0,566)">
+            <rect x="30" y="0" width="740" height="190" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#1B2A38"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">3</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#1B2A38">Claude做三步</text>
+            <text x="70" y="80" font-size="14" fill="#1B2A38"><tspan font-weight="700">核對</tspan>——照片讀數 vs 草圖數字逐筆對，加總重算。有出入會標出來問你，不自己猜。</text>
+            <text x="70" y="116" font-size="14" fill="#1B2A38"><tspan font-weight="700">編排</tspan>——照片排成「段①讀數→段①全景→段②…」，瑕疵照配位置說明。</text>
+            <text x="70" y="152" font-size="14" fill="#1B2A38"><tspan font-weight="700">產出</tspan>——一段可直接複製到LINE的回傳文（見下）。</text>
+          </g>
+          <g transform="translate(0,776)">
+            <rect x="30" y="0" width="740" height="420" fill="#F6F8F9" stroke="#C3CDD6"/>
+            <rect x="30" y="0" width="46" height="46" fill="#B4531F"/>
+            <text x="53" y="32" font-size="24" font-weight="700" fill="#F6F8F9" text-anchor="middle">4</text>
+            <text x="94" y="31" font-size="20" font-weight="700" fill="#B4531F">傳給岳父的樣子　<tspan font-size="13" font-weight="400" fill="#4A5C6A">先文字、再照片</tspan></text>
+            <rect x="90" y="62" width="400" height="340" rx="12" fill="#FFFFFF" stroke="#1B2A38" stroke-width="2.5"/>
+            <rect x="110" y="82" width="360" height="300" rx="6" fill="#E8F5E0"/>
+            <text x="128" y="110" font-size="12.5" fill="#1B2A38" font-family="monospace" font-weight="700">台中車站 收尾切割丈量 8/16</text>
+            <text x="128" y="136" font-size="12.5" fill="#1B2A38" font-family="monospace">【丈量】</text>
+            <text x="128" y="158" font-size="12.5" fill="#1B2A38" font-family="monospace">段① 弧形收邊(東) 12.6M</text>
+            <text x="128" y="180" font-size="12.5" fill="#1B2A38" font-family="monospace">段② 弧形收邊(中) 15.3M</text>
+            <text x="128" y="202" font-size="12.5" fill="#1B2A38" font-family="monospace">段③ 弧形收邊(西)  8.4M</text>
+            <text x="128" y="224" font-size="12.5" fill="#1B2A38" font-family="monospace" font-weight="700">合計 36.3M</text>
+            <text x="128" y="250" font-size="12.5" fill="#1B2A38" font-family="monospace">【瑕疵】3處 照片附後</text>
+            <text x="128" y="272" font-size="12.5" fill="#1B2A38" font-family="monospace">瑕1 段①中段 崩角</text>
+            <text x="128" y="294" font-size="12.5" fill="#1B2A38" font-family="monospace">瑕2 段② 勾縫裂</text>
+            <text x="128" y="316" font-size="12.5" fill="#1B2A38" font-family="monospace">瑕3 段③ 水泥漬</text>
+            <text x="128" y="342" font-size="12.5" fill="#1B2A38" font-family="monospace">【弧度】目視OK 遠拍附後</text>
+            <text x="128" y="368" font-size="12.5" fill="#1B2A38" font-family="monospace">照片依段落順序附後↓</text>
+            <text x="530" y="100" font-size="14" fill="#1B2A38">他30秒看完全貌，</text>
+            <text x="530" y="124" font-size="14" fill="#1B2A38">要細節再往下滑照片。</text>
+            <text x="530" y="164" font-size="13" fill="#4A5C6A">這份格式他可以</text>
+            <text x="530" y="186" font-size="13" font-weight="700" fill="#B4531F">直接轉傳工地主任</text>
+            <text x="530" y="208" font-size="13" fill="#4A5C6A">拿去對數量。</text>
+            <text x="530" y="248" font-size="13" fill="#4A5C6A">30張裸照片＝幫忙的晚輩</text>
+            <text x="530" y="272" font-size="13" font-weight="700" fill="#1B2A38">一份有交代的報告＝</text>
+            <text x="530" y="294" font-size="13" font-weight="700" fill="#1B2A38">做事的人</text>
+          </g>
+          <g transform="translate(0,1216)">
+            <rect x="30" y="0" width="740" height="160" fill="#1B2A38"/>
+            <text x="52" y="36" font-size="16" font-weight="700" fill="#F6F8F9">記住三件事</text>
+            <text x="52" y="72" font-size="14" fill="#C3CDD6">・給Claude的：<tspan fill="#F6F8F9" font-weight="700">全部、原樣、不用挑</tspan>——整理是Claude的事。</text>
+            <text x="52" y="104" font-size="14" fill="#C3CDD6">・給岳父的：<tspan fill="#F6F8F9" font-weight="700">文字在前、照片在後</tspan>——先給結論，細節在後面。</text>
+            <text x="52" y="136" font-size="14" fill="#C3CDD6">・數字有疑問<tspan fill="#E08A4E" font-weight="700">當天處理</tspan>——隔天再回工地補量，磚可能已經被蓋住或封場。</text>
+          </g>
+        </svg>
+      </div>
+    </details>
+
+    <div class="flow">
+      <div class="step"><div class="rail"><div class="num">1</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">今晚就做</div>
+          <ul>
+            <li>傳確認訊息:「伯父,明天量收尾那段的切割線對嗎?人孔樹穴周邊要不要一起?」</li>
+            <li>裝備:輪尺(先確認單位是公尺)、捲尺5m、粉筆、筆記本+筆、手機充飽+行動電源</li>
+            <li>水、帽子、好走的鞋。早點睡。</li>
+          </ul>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">2</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">到場先打招呼、再確認範圍(5分鐘)</div>
+          <p class="card-note" style="margin-bottom:0;">「伯父早。我今天量的範圍你帶我看一下,從哪裡到哪裡。」——讓他指,你聽。</p>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">3</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">走一遍、畫草圖(15分鐘)</div>
+          <p>沿著要量的線走一遍,筆記本畫出形狀、分段編號(①②③…)、標出人孔樹穴位置。</p>
+          <div class="callout">先分段再量。長線切成幾段,每段一個數字,出錯只重量一段。</div>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">4</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">照節奏量(主要時間)</div>
+          <div class="price-box">歸零 → 對起點 → 推 → 停 → 拍讀數 → 拍全景 → 寫草圖 → 才歸零</div>
+          <p>每一段一模一樣的動作。固定節奏=老手的樣子。弧線沿著弧線推(輪尺強項)。人孔樹穴用捲尺,量周長、數幾處、各拍一張。</p>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">5</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">拍照規則</div>
+          <p>每段兩張:<b>① 輪尺讀數特寫</b>(數字要能放大看清) <b>② 該段全景</b>(看得出起訖點)。拍完立刻在草圖寫:<code>段① 12.6M</code>,照片和數字要對得起來。</p>
+          <div class="callout warn">鐵律:沒拍照之前,不准歸零。這些照片=岳父跟營造廠對數量的證據,你手上的輪尺直接連著他的請款單。</div>
+          <p style="margin-top:10px;"><b>全景怎麼拍</b>:對——量完站在終點,回頭沿著線拍向起點,一張裡看到整條線+起點標記+周邊參照物(人孔、花台、柱子)。手機稍微蹲低拍,線的走向更清楚;橫的拍不下就改直拍;起點放個東西當記號(粉筆畫★、放水瓶)。</p>
+          <p><b>避免三種拍法</b>:垂直往下拍(只看到幾片磚)、從側面橫著拍(線變成一小截)、拍太遠沒參照物(三天後自己都認不出位置)。太長一張裝不下的段:起點半段拍一張+終點回拍一張,兩張都標同一個段號。</p>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">6</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">草圖怎麼畫</div>
+          <ul>
+            <li>寧可小而完整,不要大而破碎——一頁裝下整條線,筆記本直的裝不下就橫過來畫</li>
+            <li>場地太大才分張:第1頁總圖(只畫外框跟分區,不放數字)+ 詳圖(每頁右上角寫頁碼,數字只寫在詳圖)</li>
+            <li>不用朝北,用現場認得出的東西標方向(往月台、建國路出口、圍籬……),一張圖裡方向要一致,中途不轉</li>
+            <li>起點自己選(挑好記的角落畫★)、順同一個方向編號、轉彎/弧線起訖點/人孔處自然斷段</li>
+            <li>線用①②③,孔用孔A孔B,樹穴用樹1樹2,瑕疵用瑕1瑕2——四種東西四套編號,不混用</li>
+            <li>量完立刻把數字寫在編號旁邊;照片檔名對編號,拍完傳LINE給自己時打一句「段① 12.6」</li>
+          </ul>
+          <div class="callout">草圖醜沒關係。三天後還看得懂哪個數字是哪一段,就是好草圖。畫完先拍一張存手機備份。</div>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">7</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">順路看瑕疵</div>
+          <p>量線的沿路順便看,分兩趟:第一趟專心推輪尺(順眼掃),量完再專門走一趟找瑕疵(15-20分)。基本節奏:每10來米蹲一次,蹲=專門抓段差,逆著光蹲效果最好。</p>
+          <p><b>用走的就看得到(4樣)</b>:崩角(切割區磚角缺一塊)、污染(水泥漬)、勾縫(沒填滿/裂)、積水痕(低窪水漬圈)——走得夠慢就會看到,眼睛掃前方2-3米。</p>
+          <p><b>要蹲、要敲(2樣)</b>:段差(蹲低、視線貼地、逆光看,凸起的磚會像小山跳出來)、空心(只敲切割過的磚、邊緣收邊附近、腳底有翹動感的地方——先敲一塊實心的當基準音,實心「叩」短促、空心「咚」悶)。</p>
+          <div class="callout">段差拍照訣竅:手機放低貼近地面拍,低角度照片裡高低差非常明顯,比文字有力一百倍。發現之後:粉筆圈起來寫編號 → 拍特寫 → 拍位置全景(帶固定參照物) → 草圖標✗。</div>
+          <p>最後站遠10米、蹲低、順著弧線方向看整條線順不順(他交代的「弧度要漂亮」就是驗這個)。</p>
+          <div class="callout warn">現場只記錄、不批評。不對工班說「這裡做壞了」,拍下來回傳岳父讓他決定——用他的權威,不是你的。找到瑕疵不是找麻煩,是幫大家在監造來之前先過一遍,這是保護整個團隊。</div>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">8</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">收工前跟他核對範圍</div>
+          <p class="card-note" style="margin-bottom:0;">「我量的是這幾段,有沒有漏的?」讓他點頭才離場。</p>
+        </div></div>
+
+      <div class="step"><div class="rail"><div class="num">9</div></div>
+        <div class="step-body"><div class="st-title">收工後:資料 → Claude → 岳父</div>
+          <p>亂丟給 Claude 沒關係,整理是 Claude 的工作。給岳父的要是能直接轉傳的格式。</p>
+          <p><b>丟給 Claude 要傳三樣</b>:草圖照片(每頁一張,拍正、光線夠)、全部現場照片(讀數、全景、瑕疵通通傳,分幾則訊息沒關係)、一段補充說明(講照片看不出來的事,例如「草圖1張。段①②③照片照順序傳。瑕疵3處在最後。人孔那段伯父說不用量。合計我自己加是36.3M,你幫我核一下」)。</p>
+          <p><b>Claude 會做三步</b>:核對(照片讀數 vs 草圖數字逐筆對,加總重算,有出入會標出來問你,不自己猜)、編排(照片排成「段①讀數→段①全景→段②…」,瑕疵照配位置說明)、產出(一段可直接複製到LINE的回傳文)。</p>
+        </div></div>
+    </div>
+
+    <h3>傳給岳父的樣子(先文字、再照片)</h3>
+    <div class="price-box">
+台中車站 收尾切割丈量 8/16<br>
+【丈量】<br>
+段① 弧形收邊(東) 12.6M<br>
+段② 弧形收邊(中) 15.3M<br>
+段③ 弧形收邊(西) 8.4M<br>
+合計 36.3M<br>
+【瑕疵】3處 照片附後<br>
+瑕1 段①中段 崩角<br>
+瑕2 段② 勾縫裂<br>
+瑕3 段③ 水泥漬<br>
+【弧度】目視OK 遠拍附後<br>
+照片依段落順序附後↓
+    </div>
+    <p>他30秒看完全貌,要細節再往下滑照片。這份格式他可以直接轉傳工地主任拿去對數量。30張裸照片是幫忙的晚輩,一份有交代的報告才是做事的人。</p>
+
+    <h3>看起來老練的七個細節</h3>
+    <ul>
+      <li><b>動作節奏固定</b>——每段同一套流程,不慌不亂,這比任何技術都像老手</li>
+      <li><b>數字唸出來再寫</b>——「段一、十二點六米」,唸一次不會抄錯</li>
+      <li><b>可疑就重量一次</b>——同一段量兩次差超過0.2M,量第三次取多數</li>
+      <li><b>不擋工班動線</b>——人家在做收尾,你量你的,眼睛看路</li>
+      <li><b>問問題問得準</b>——「這段人孔算切割嗎?」比「我要怎麼量」高一個檔次</li>
+      <li><b>中午前傳進度</b>——「量一半了,目前XX米」,他不用問你就先報</li>
+      <li><b>收工前跟他核對範圍</b>——讓他點頭才離場</li>
+    </ul>
+
+    <div class="callout warn">記住三件事:給 Claude 的全部、原樣、不用挑;給岳父的文字在前、照片在後;數字有疑問當天處理——隔天再回工地補量,磚可能已經被蓋住或封場。準比快重要,第一次做,寧可慢十分鐘,不要錯一個數字。</div>
+
+    <h3>2026/08/15新增:監造與驗收怎麼運作</h3>
+    <p>監造是建築師/技師事務所受業主委託的第三方查核角色,監造眼中「下包不存在」——罵人是往下傳的(監造→工地主任→岳父→阿心)。<b>你的客戶是工地主任,不是監造</b>;監造是技術關卡。監造當場交代的事,做筆記+回報工地主任,不要自己替營造廠做決定(例如換料)。</p>
+    <div class="flow">
+      <div class="step"><div class="rail"><div class="num">1</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">開工前</div><div class="st-desc">施工計畫、材料樣品送審、出廠證明、CNS報告——這些文書作業是你能立刻幫上忙的地方。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">2</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">材料進場</div><div class="st-desc">對樣品、對規格,不合整批退。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">3</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">隱蔽部分覆蓋前(最關鍵)</div><div class="st-desc">原土夯實、級配、鋼線網、PC、放樣高程洩水——主動通知請驗,沒等就蓋,之後可能被要求敲開重驗。<b>隱蔽工程覆蓋前自己先拍照,照片裡放尺</b>,監造不會天天來,責任還是在自己身上。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">4</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">施工中</div><div class="st-desc">不定期巡查+每月固定估驗日(現場丈量、雙方簽認、數字定案)。工地主任在估驗前通常會先跟下包對數字——這時候是同一陣線,一起面對監造。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">5</div></div>
+        <div class="step-body"><div class="st-title">完工</div><div class="st-desc">初驗(開缺失單)→改善→複驗→合格→退保留款。</div></div></div>
+    </div>
+    <div class="callout">被蓋住前沒量到=永遠量不到。沒紀錄的一方吃虧,養成每日數量記錄表的習慣:日期/區域/工項/單位/今日量/累計量/人數/天氣/照片/爭議待確認。</div>
+
+    <h3>現場糾錯的分寸——該說 vs 該讓</h3>
+    <p>判斷線只有一條:<b>這個瑕疵事後補得回來嗎?</b></p>
+    <ul>
+      <li><b>補不回來,當場就要說</b>:級配、洩水坡、PC厚度、側石線位、伸縮縫、每個工項的第一天起頭</li>
+      <li><b>補得回來,收尾一起講</b>:個別段差、勾縫、清潔</li>
+      <li><b>加重處理</b>:安全問題不分階段都要講、起頭錯了後面全錯、監造一定會挑的項目要早講</li>
+      <li><b>該讓的</b>:規範沒寫只是美感問題、代價遠大於效益、自己還不確定的(先改成問句)</li>
+    </ul>
+    <div class="callout">講法有分寸:私下講不當眾講、用問的不用指控的、指標準不指人(「監造會看這個」比「你做錯了」好)。剛開始前三個月,不確定該不該糾正就先記下來,回頭問岳父——用他的權威,不是你的。</div>
+
+    <h3>換磚SOP(台中車站收尾示範)</h3>
+    <ol>
+      <li>踩找晃動(大面積用踩的巡,單塊用敲的確認)</li>
+      <li>起磚器(雙桿夾式)插縫夾起,不傷磚也不傷鄰磚</li>
+      <li>白桶乾砂/乾拌料,手抓憑手感補(哪角低補哪角)</li>
+      <li>抹刀刮平,放回原位</li>
+      <li>橡膠鎚敲實(不能用鐵鎚,會把磚敲裂)→ 再踩一次確認</li>
+    </ol>
+    <p class="card-note">交付前修好=幾分鐘的事;交付後才修=保固案件,要跑流程。監造不會踩到每一塊磚,施工方要自己踩——因為保固是自己扛。治本要看排水:花台積水滲到底下,砂被帶走磚就會鬆動。</p>
+
+    <h3>梳齒咬合邊(鋪面分區銜接工法)</h3>
+    <p>鋪面邊緣的磚交錯伸出、旁邊留一條溝,是預留咬合位置——下一區鋪過來時剛好插入這個缺口,避免兩區之間出現一條直縫,直縫容易開裂下陷。</p>
+
+    <h3>工地詞彙(中/英/Tagalog)</h3>
+    <div class="tw"><table>
+      <tr><th>情境</th><th>詞彙</th></tr>
+      <tr><td>米的意思會變</td><td>「米」在鋪面工項=㎡、在緣石工項=M(延米)、在砂石車工項=方(m³)——要聽上下文判斷</td></tr>
+      <tr><td>砂石車載重</td><td>一車載「9米」=9方;碎石約1.5噸/方,換算一車約13.5噸</td></tr>
+      <tr><td>打RC vs PC</td><td>打RC=澆置鋼筋混凝土(有鋼筋做結構用,如座椅、基座);PC=素混凝土(無鋼筋,打底層用)</td></tr>
+      <tr><td>台斤↔公斤↔噸</td><td>台斤×0.6=公斤;公斤÷1000=噸</td></tr>
+      <tr><td>英文</td><td>hardscape contractor / paving contractor(硬景觀/鋪面承包商)、paver installation(鋪磚施工)、subcontractor(下包)、paving crew(鋪面工班)</td></tr>
+      <tr><td>Tagalog(菲律賓語)</td><td>mason / kantero(泥作)、kontratista(承包)、kapatas(工頭)、paglalatag ng paver(鋪磚)——實務上直接講英文hardscape/paving works,菲律賓工人大多聽得懂</td></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- ===== 計算機 ===== -->
+<div id="view-calc" class="view">
+  <div class="notes-wrap">
+    <h2>工地隨身計算機</h2>
+    <p>岳父在工地講解的時候,現場直接算給他看。單價可以自己改,因為不同案子、不同年份行情會變。</p>
+
+    <div class="calc-card">
+      <h3>坪 ↔ m² 互換</h3>
+      <p class="card-note">業主報坪數,秒算成 m² 才能套報價公式。1坪 = 3.3058 m²(算式用3.3)。</p>
+      <div class="field-row">
+        <div class="field"><label>坪</label><input type="number" id="ping_p" inputmode="decimal" placeholder="輸入坪數"></div>
+        <div class="op">=</div>
+        <div class="field"><label>m²</label><input type="number" id="ping_m" inputmode="decimal" placeholder="輸入平方公尺"></div>
+      </div>
+      <div class="calc-trick"><b>心算</b>:坪數×3.3拆成「坪數×3」+「坪數的十分之三」。30坪:30×3=90,30的十分之三=9,合計99 m²。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>面積快算</h3>
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="area-m">量尺寸(公尺)</button>
+        <button class="mode-btn" data-mode="area-brick">數磚塊</button>
+      </div>
+      <div id="area-m-panel">
+        <div class="field-row">
+          <div class="field"><label>長 <span class="unit">m</span></label><input type="number" id="area_l" inputmode="decimal"></div>
+          <div class="op">×</div>
+          <div class="field"><label>寬 <span class="unit">m</span></label><input type="number" id="area_w" inputmode="decimal"></div>
+        </div>
+      </div>
+      <div id="area-brick-panel" style="display:none;">
+        <div class="field-row">
+          <div class="field"><label>長邊磚數</label><input type="number" id="brick_nl" inputmode="decimal"></div>
+          <div class="op">×</div>
+          <div class="field"><label>寬邊磚數</label><input type="number" id="brick_nw" inputmode="decimal"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>單塊磚邊長 <span class="unit">m</span></label><input type="number" id="brick_s" inputmode="decimal" value="0.3"></div>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="result"><div class="r-label">面積</div><div class="r-value" id="area_out_m2">—<span class="unit">m²</span></div></div>
+        <div class="result"><div class="r-label">換算坪數</div><div class="r-value" id="area_out_ping">—<span class="unit">坪</span></div></div>
+      </div>
+      <div class="calc-trick"><b>心算</b>:20塊磚×20塊磚、單塊0.3m → 20×0.3=6,6×6=36m²。數磚塊比拉捲尺量整片地快。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>圓形 / 扇形鋪面</h3>
+      <p class="card-note">弧形廣場用半徑抓面積跟收邊長度。</p>
+      <div class="field-row">
+        <div class="field"><label>半徑 <span class="unit">m</span></label><input type="number" id="circ_r" inputmode="decimal"></div>
+        <div class="field"><label>角度(整圓留空) <span class="unit">度</span></label><input type="number" id="circ_deg" inputmode="decimal" placeholder="360"></div>
+      </div>
+      <div class="result-grid">
+        <div class="result"><div class="r-label">面積</div><div class="r-value" id="circ_out_area">—<span class="unit">m²</span></div></div>
+        <div class="result"><div class="r-label">弧長(收邊長度)</div><div class="r-value" id="circ_out_len">—<span class="unit">m</span></div></div>
+      </div>
+      <div class="calc-trick"><b>心算</b>:π用「3」估,面積≈半徑×半徑×3,周長≈半徑×6.3。下料前再用計算機精算一次。<br><b>岳父的算法(背這兩個數字:3.14跟0.785)</b>:整圓面積=直徑×直徑×0.785;圓周長(收邊用)=直徑×3.14。現場量「直徑」時找最長那條線,不用找圓心。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>體積換算(叫車用)</h3>
+      <p class="card-note">級配、砂、混凝土、回填土這類材料算的是「方」(m³),不是面積。公式:面積×厚度(公尺)=方。</p>
+      <div class="field-row">
+        <div class="field"><label>面積 <span class="unit">m²</span></label><input type="number" id="vol_area" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>厚度 <span class="unit">cm</span></label><input type="number" id="vol_thick" inputmode="decimal"></div>
+      </div>
+      <div class="result-grid">
+        <div class="result"><div class="r-label">體積</div><div class="r-value" id="vol_out">—<span class="unit">方(m³)</span></div></div>
+        <div class="result"><div class="r-label">預拌車趟數</div><div class="r-value" id="vol_out_trips">—<span class="unit">趟</span></div></div>
+      </div>
+      <div class="calc-trick"><b>心算</b>:公分先÷100變公尺——10cm→÷10、20cm→÷5、5cm→÷20,再乘面積。例:200㎡鋪10cm厚,200×0.10=20方。預拌車一車約6-8方,20方大概抓3車。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>報價快算</h3>
+      <div class="field-row">
+        <div class="field"><label>舖設面積 <span class="unit">m²</span></label><input type="number" id="q_pave_area" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>單價</label><input type="number" id="q_pave_price" inputmode="decimal" value="300"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>路緣長度 <span class="unit">m</span></label><input type="number" id="q_curb_len" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>單價</label><input type="number" id="q_curb_price" inputmode="decimal" value="300"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>切割收邊長度 <span class="unit">m</span></label><input type="number" id="q_cut_len" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>單價</label><input type="number" id="q_cut_price" inputmode="decimal" value="250"></div>
+      </div>
+      <div class="result"><div class="r-label">報價總額</div><div class="r-value" id="q_out">—<span class="unit">元</span></div><div class="r-sub" id="q_out_sub"></div></div>
+      <div class="calc-trick"><b>心算</b>:乘300=先乘3再補兩個0。乘250=先乘1000再除以4。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>工資快算</h3>
+      <p class="card-note">「工」= 一人做一天。跨好幾天的零星人力,先把每天的工加總,再乘日薪。</p>
+      <div class="field-row">
+        <div class="field"><label>人數</label><input type="number" id="w_n" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>天數</label><input type="number" id="w_d" inputmode="decimal"></div>
+        <div class="op">×</div>
+        <div class="field"><label>日薪</label><input type="number" id="w_r" inputmode="decimal" value="1500"></div>
+      </div>
+      <div class="result"><div class="r-label">總工資</div><div class="r-value" id="w_out">—<span class="unit">元</span></div><div class="r-sub" id="w_out_sub"></div></div>
+    </div>
+
+    <div class="calc-card">
+      <h3>分包利潤快算</h3>
+      <p class="card-note">阿新/阿心那套邏輯:分包價減工資成本等於利潤,跟仲介抽成算法是同一件事。</p>
+      <div class="field-row">
+        <div class="field"><label>分包總價(數量價)</label><input type="number" id="m_total" inputmode="decimal"></div>
+        <div class="op">−</div>
+        <div class="field"><label>工人工資成本</label><input type="number" id="m_cost" inputmode="decimal"></div>
+      </div>
+      <div class="result-grid">
+        <div class="result"><div class="r-label">利潤</div><div class="r-value" id="m_out">—<span class="unit">元</span></div></div>
+        <div class="result"><div class="r-label">利潤率</div><div class="r-value" id="m_out_pct">—<span class="unit">%</span></div></div>
+      </div>
+    </div>
+
+    <div class="calc-card">
+      <h3>材料需求量計算(叫料用)</h3>
+      <p class="card-note">知道面積之後,要抓到底要買幾塊磚、要留多少損耗。這是報價跟叫料都會用到的計算。</p>
+      <div class="field-row">
+        <div class="field"><label>鋪面面積 <span class="unit">m²</span></label><input type="number" id="mat_area" inputmode="decimal"></div>
+        <div class="field"><label>單塊磚邊長 <span class="unit">m</span></label><input type="number" id="mat_brick" inputmode="decimal" value="0.3"></div>
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="mat-straight">直線鋪面(損耗5-10%)</button>
+        <button class="mode-btn" data-mode="mat-curve">弧形/圓形(損耗15-20%)</button>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>損耗率 <span class="unit">%</span></label><input type="number" id="mat_loss" inputmode="decimal" value="8"></div>
+      </div>
+      <div class="result-grid">
+        <div class="result"><div class="r-label">實鋪需要磚數</div><div class="r-value" id="mat_out_base">—<span class="unit">塊</span></div></div>
+        <div class="result"><div class="r-label">建議叫料數量(含損耗)</div><div class="r-value" id="mat_out_total">—<span class="unit">塊</span></div></div>
+      </div>
+      <div class="calc-trick"><b>口訣</b>:「面積除單塊,損耗要加值」——面積÷單塊磚面積=實鋪數量,再乘以(1+損耗率)才是要叫的料。<b>直線鋪面損耗抓5-10%,弧形/圓形因為要大量切磚,損耗要抓到15-20%</b>,少抓就等於現場叫料叫兩次。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>柱子間隔計算</h3>
+      <p class="card-note">牆面貼磚、圍籬打樁這類「等距排列」的東西,都要先算間隔數量才能算總材料。</p>
+      <div class="field-row">
+        <div class="field"><label>總長度 <span class="unit">m</span></label><input type="number" id="col_len" inputmode="decimal"></div>
+        <div class="field"><label>柱距(中心距) <span class="unit">m</span></label><input type="number" id="col_gap" inputmode="decimal"></div>
+      </div>
+      <div class="result"><div class="r-label">需要柱數</div><div class="r-value" id="col_out">—<span class="unit">根</span></div><div class="r-sub" id="col_out_sub"></div></div>
+      <div class="calc-trick"><b>口訣</b>:「總長除柱距,無條件進位」——柱數=總長÷柱距,算出來有小數一律進位,不能無條件捨去(不夠的那一小段還是要立一根柱子)。<b>務必先確認柱距是「中心距」還是「淨距」</b>:中心距是柱子中心到中心的距離(算柱數直接除);淨距是柱子與柱子之間的淨空(要先加一個柱寬還原成中心距才能除)。兩種算法差出來的根數不一樣,岳父的柱牆範例裡,淨距算28根、中心距算31根,差了3根。</div>
+    </div>
+
+    <div class="calc-card">
+      <h3>心算技巧卡</h3>
+      <p class="card-note">現場沒計算機、或岳父話講得快,先抓概數,回頭再精算。</p>
+      <p><b style="color:var(--brick);">抓漲幅/難度加成</b>:抓10%就是小數點左移一位。抓5%是10%的一半。抓15%=10%+5%。抓20%=10%×2。</p>
+      <p><b style="color:var(--brick);">兩個接近整數的數字相乘</b>:差平方法,湊出中間整數,取兩邊差距,整數平方減差距平方。例:18×22→20×20−2×2=396。</p>
+      <p><b style="color:var(--brick);">乘250/150這類單價</b>:乘250=先乘1000再除4。乘150=先乘100再加一半。</p>
+      <p><b style="color:var(--brick);">公分↔公尺</b>:公分數字小數點左移兩位就是公尺。量到285cm=2.85m。</p>
+    </div>
+
+    <div class="calc-card">
+      <h3>出題練習(不斷練習用)</h3>
+      <p class="card-note">選一個類型,按「出題」,自己心算或用紙筆算,算完再按「看答案」核對步驟跟口訣。同一類型可以一直「換一題」,數字每次都不一樣,練到手感自然為止。</p>
+      <div class="quiz-controls" id="practiceChips" style="margin-bottom:14px;"></div>
+      <div class="price-box" id="practiceQuestion" style="font-size:14.5px; min-height:20px;">按上面的分類按鈕開始出題</div>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <button class="reveal-btn" id="practiceRevealBtn">看答案</button>
+        <button class="shuffle-btn" id="practiceNextBtn" style="margin-left:0;">🔀 換一題(同類型)</button>
+      </div>
+      <div class="answer-box" id="practiceAnswerBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 產業流程 ===== -->
+<div id="view-flow" class="view">
+  <div class="notes-wrap">
+    <h2>從接到案子到收到錢,中間發生了什麼</h2>
+    <p class="lede">這是台灣景觀鋪面工程(連鎖磚/石作/護坡)一般案子的完整流程,不是每個案子都會走完全部步驟(小案通常簡化很多),但獨立接案至少要知道每個環節在做什麼。</p>
+    <div class="flow">
+      <div class="step"><div class="rail"><div class="num">1</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">案源</div>
+          <div class="st-desc">三種常見來源:①公家機關發包(公所、學校、公共建設)②私人建商/住宅屋主 ③其他營造廠找你分包或報價(這也是岳父目前主要的接案方式)。政府案 15 萬元以下屬「小額採購」,機關可以不公開招標直接洽廠商——這是很多小型工程行接得到公所案子的原因。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">2</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">現場勘查、丈量</div>
+          <div class="st-desc">到現場看地形、量尺寸、拍照存證,順便確認進出料動線(車能不能開進去)、地下有沒有管線或障礙物。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">3</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">拿到圖面(或自己畫雛形)</div>
+          <div class="st-desc">政府案通常監造單位會給施工圖;私人案常常沒有,要自己畫草圖、標尺寸。沒有圖面只能抓概數,有圖面才能報準確價。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">4</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">估價、報價</div>
+          <div class="st-desc">面積×舖設單價 + 長度×路緣單價 + 異形段×切割收邊單價,再依現場難度(彎道、高低差、進出料難易)往上調整,不是死套公式。</div>
+          <div class="price-box" style="margin-top:10px; font-size:12.5px; line-height:1.8;">
+模擬範例:公共工程分包報價怎麼算(示範用數字,非真實案件金額)<br>
+緣石(植栽槽緣石) 300M × 240 = 72,000<br>
+緣石(收邊緣石,壓花仿岩面) 200M × 270 = 54,000<br>
+緣石(人行道緣石) 80M × 240 = 19,200<br>
+高壓磚舖面 150M² × 270 = 40,500<br>
+植草磚舖設(含沃土回填+碎石整平) 600M² × 450 = 270,000<br>
+小計 455,700 + 稅金5% 22,785 = <b>合計 478,485元</b>
+          </div>
+          <p class="card-note" style="margin:8px 0 0;">同一個「緣石」在不同規格(植栽槽緣石/收邊緣石/人行道緣石)單價都不一樣(240~270元不等),植草磚因為工序多(舖設+回填+碎石整平三道分開計價)單價才會拉到450元/m²——真實報價比課本公式細很多,材質規格不同、單價就不同。</p>
+        </div></div>
+      <div class="step"><div class="rail"><div class="num">5</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">簽約</div>
+          <div class="st-desc">報價對方接受後一定要簽約,把付款條件、工期寫清楚,不然後面容易有糾紛、錢收不回來。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">6</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">備料</div>
+          <div class="st-desc">依面積算出材料用量下訂,協調到貨時間配合工期。料不夠時常見做法是先切去別的有料案場做,不讓工人閒置。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">7</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">調度工人</div>
+          <div class="st-desc">依工程量抓「工」數,安排自己的班底或外叫臨時工。可以按日薪計算,也可以整段工程用「數量」分包給工頭。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">8</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">施工</div>
+          <div class="st-desc">整地放樣 → 級配夯實 → 細砂/水泥砂漿整平 → 鋪面/砌石施作 → 收邊切割 → 清潔。不同工項對天氣的敏感度不同,排程要彈性調整。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">9</div><div class="stem"></div></div>
+        <div class="step-body"><div class="st-title">驗收</div>
+          <div class="st-desc">業主或監造單位現場勘驗,拍照存證。政府工程通常有正式的驗收程序跟表單。</div></div></div>
+      <div class="step"><div class="rail"><div class="num">10</div></div>
+        <div class="step-body"><div class="st-title">請款、保固</div>
+          <div class="st-desc">私人案常見完工現金付現;政府/營造廠案通常要開統一發票、走估驗計價流程。公共工程完工後常有保固期(依合約,常見約1年),期間如有損壞要回頭處理。</div></div></div>
+    </div>
+    <div class="callout">政府採購小知識:公告金額目前是150萬元,其十分之一、也就是<b>15萬元以下</b>屬於「小額採購」,機關可以不經公開招標、直接洽廠商採購。超過這個門檻的案子才需要走比價或公開招標程序。</div>
+  </div>
+</div>
+
+<!-- ===== 岳父的範圍 ===== -->
+<div id="view-scope" class="view">
+  <div class="notes-wrap">
+    <h2>從照片歸納:岳父實際在做的工法範圍</h2>
+    <p class="lede">這是把 152 張工地照片按工法類型歸納出來的,不含地址等私人細節。用來了解「這行的工作到底涵蓋什麼」。</p>
+    <div class="scope-grid">
+      <div class="scope-card"><div class="sc-title">連鎖磚鋪面(主力工項)</div><div class="sc-desc">各種花色:十字對縫、人字砌、扇形放射狀、棋盤格雙色、菱格紋。這是照片裡出現次數最多的工法。</div></div>
+      <div class="scope-card"><div class="sc-title">邊界收邊</div><div class="sc-desc">花崗石/RC路緣石施作,異形轉角切割收邊——這是報價單價最高的工項,因為費工。</div></div>
+      <div class="scope-card"><div class="sc-title">護坡/擋土</div><div class="sc-desc">石籠(蛇籠)、毛石砌擋土牆、鍍鋅鐵籠,用在河堤、邊坡的景觀化工程。</div></div>
+      <div class="scope-card"><div class="sc-title">景觀石作</div><div class="sc-desc">洗石子牆面、鵝卵石填充/馬賽克裝飾牆、圓形樹穴與花台——單價較高、講究美感判斷的工項。</div></div>
+      <div class="scope-card"><div class="sc-title">特殊造型鋪面</div><div class="sc-desc">弧形/圓形廣場放樣、仿木紋鵝卵石階梯、心形裝飾鋪面——需要額外的SOP知識(例如圓從內而外、階梯下而上)。</div></div>
+      <div class="scope-card"><div class="sc-title">承接的業主類型</div><div class="sc-desc">區公所發包的小型公共工程(公園、活動中心、遊戲場)、大型公共建設分包(轉運站、肉品市場)、私人建案(別墅、集合住宅)、其他營造廠委託報價與分包。</div></div>
+    </div>
+    <div class="callout">✅ 2026/08/15更新:原本標註「沒看到植草磚施工證據」已經確認——岳父參與過的一個大型工程案裡,植草磚舖設面積達千坪等級(含沃土回填植草+二分碎石整平)。植草磚確實是岳父業務範圍的一部分,而且是大面積標案等級的工程。</div>
+
+    <h3>作品集素材清單(2026/08/15,岳父親口整理)</h3>
+    <div class="tw"><table>
+      <tr><th>類型</th><th>案名</th></tr>
+      <tr><td>交通公共</td><td>台中車站轉運中心(圓形城市地圖Logo鋪面)、大埤抽水站路緣石、松竹路納骨塔</td></tr>
+      <tr><td>公園環境</td><td>員林龍燈公園(弧形收邊、圓形放射)、台南大內青果風華、新社公所廣場</td></tr>
+      <tr><td>學校機關</td><td>南屯樹德國小(蛇籠擋土牆)、中興大學獸醫大樓、彰化芬園防疫所(植草磚)、台南仁德聯合活動中心、霧峰六股糧食局</td></tr>
+      <tr><td>住宅建案</td><td>彰化宏海御邸、北屯廊子安居</td></tr>
+    </table></div>
+    <p class="card-note">服務範圍:中彰投雲嘉南。岳父自己的定位是「景觀施作」,不是「鋪磚工」——工項涵蓋鋪面(透水磚/植草磚/花崗石/紅磚/圓形放射)、蛇籠擋土牆、砌石護岸、圓形花台、路緣石,範圍比純鋪磚廣。</p>
+  </div>
+</div>
+
+<!-- ===== 獨立作業清單 ===== -->
+<div id="view-checklist" class="view">
+  <div class="notes-wrap">
+    <h2>要獨立報價、獨立管理工人,最少要準備這些</h2>
+    <p class="lede">不用一次到位,但要知道有這些關卡,免得真的接案時才發現漏了什麼。</p>
+    <h3>資格與登記</h3>
+    <div class="checklist">
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">丙級造園景觀技術士(非必要,但加分)</div><div class="ck-desc">報考資格:年滿15歲或國中畢業即可,分學科+術科,勞動部勞動力發展署技能檢定中心主辦。接公家案、跟業主談信任度時有幫助。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">商業登記(行號)</div><div class="ck-desc">月銷售額達10萬元以上就要辦理商業登記。行號沒有法定最低資本額,但資本額25萬以上要附資金證明;想開發票的話資本額建議抓10-20萬。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">⚠️商業登記 ≠ 營造業登記,關係到能不能自己申請移工</div><div class="ck-desc">岳父的公司是「商業登記」,不是「營造業登記」——一般營造業移工配額是發給有營造業登記的營造廠,商業登記的下包很可能不具申請資格(實際規定要向勞動部/就業服務處確認)。這件事直接關係到你的移工仲介背景能不能用得上,獨立接案前要先搞清楚自己要辦哪一種登記,還是繼續當下包用別人的配額。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">公共意外責任險</div><div class="ck-desc">獨立接案後,施工現場出意外的風險要自己扛,開始收案前務必投保。</div></div></div>
+    </div>
+    <h3>報價紀律</h3>
+    <div class="checklist">
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">先要圖面再報價</div><div class="ck-desc">沒圖面只能抓概數,有圖面才能判斷施工難度、報準確價。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">依現場難度調整單價</div><div class="ck-desc">單價表只是起點,彎道、高低差、進出料難易度都要往上加價。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">報價確定就簽約</div><div class="ck-desc">白紙黑字寫清楚付款條件跟工期,避免事後糾紛、錢收不回來。</div></div></div>
+    </div>
+    <h3>工人管理(你的強項,直接遷移過來就好)</h3>
+    <div class="price-box" style="font-size:12.5px; line-height:1.9;">
+範例:景觀鋪面業界常見的三層分包費率結構(示範用數字)<br>
+報營造廠(純工不帶料) 300元/㎡<br>
+發包給外籍工班 60元/㎡ ← 價差240元/㎡<br>
+發包給台灣工班 120元/㎡ ← 價差180元/㎡<br>
+工人日薪 1,500元/日
+    </div>
+    <p class="card-note" style="margin:6px 0 14px;">同樣是「發包出去」,外籍工班的價差(240)比台灣工班的價差(180)大——不是外籍工班比較廉價被剝削,而是產能不同、風險承擔不同,價差就是「管理+承擔風險」的定價。用60元反推:一組3人一天成本4,500元,損益兩平在75㎡/天,所以會接的班一天實際要做到100㎡以上。</p>
+    <div class="checklist">
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">選擇分包(數量制)還是日薪制</div><div class="ck-desc">數量制:整段工程包給工頭,工頭自己扛工資成本、賺價差,你不用管過程,只看結果。日薪制:自己直接管每天出勤,適合小案或信任的固定班底。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">工資簽收紀錄留底</div><div class="ck-desc">每天/每案的出工人數、工資金額要留紀錄,方便對帳跟未來報價參考。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">外籍工班的身分要先搞清楚</div><div class="ck-desc">如果工頭(像阿心)本身是外籍身分,他能不能合法「承攬」案子、僱工、開發票是另一回事——如果他法律上只能「受僱」,他找來的工人的雇主責任很可能會落到你頭上。必問三題:①工頭身分能不能合法承攬?②工人的勞健保投在哪裡?③萬一職災,責任算誰的?這塊是你原本的專業,但角色反過來了(你以前是幫忙合規,現在要自己承擔合規責任)。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">真正的風險不是監造,是勞檢</div><div class="ck-desc">勞動檢查臨檢罰的是雇主本人;職災如果沒保險,賠償要自己出,這是小包商最容易倒的原因;公共工程出事還可能被停權(禁止一段時間內承接政府標案)。你的雙語能力+合規知識是差異化優勢,但前提是自己先合法。</div></div></div>
+    </div>
+    <h3>請款與稅務</h3>
+    <div class="checklist">
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">統一發票</div><div class="ck-desc">承接政府/營造廠案子通常需要開發票請款,私人小案常見是完工現金付現。</div></div></div>
+      <div class="check-item"><div class="ck-box"></div><div><div class="ck-title">保固期</div><div class="ck-desc">公共工程完工後常有保固期(依合約約定,常見約1年),期間損壞要負責回頭修。</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 新手總複習 ===== -->
+<div id="view-walkthrough" class="view">
+  <div class="notes-wrap">
+    <h2>新手總複習:一個案子從頭走到尾</h2>
+    <p class="lede">這不是真實案例,是把你已經學過的東西串成一次完整流程,讓你看到「原來每一步都用得上」。情境:一戶透天車道要鋪連鎖磚,業主口頭問你「大概多少錢」。</p>
+
+    <h3>第一步:現場勘查(先別急著算)</h3>
+    <p>人到現場,眼睛先看三件事:地平不平(要不要多花整地的工)、進出料方不方便(車能不能直接開到工地口)、有沒有轉角/異形段(切割收邊的地方)。這一步跟你以前去雇主工廠履勘一樣——你不是去簽約,是去抓風險。</p>
+
+    <h3>第二步:丈量(用你已經會的方法)</h3>
+    <p>沒帶捲尺,用數磚塊的方法抓概數:車道大概能擺 20 塊磚 × 20 塊磚,一塊磚邊長 0.3 米。</p>
+    <div class="price-box">20 × 0.3 = 6 米(寬)<br>20 × 0.3 = 6 米(長)<br>6 × 6 = 36 m²</div>
+    <p>記住:這是抓概數的方法,正式報價前還是要有圖面或實際丈量核對。</p>
+
+    <h3>第三步:套報價公式</h3>
+    <p>你手上的價目表(岳父給的):舖設 $300/m²、路緣 $300/延米、切割收邊 $250/延米。車道邊界大概量出路緣長度 10 米,轉角需要切割收邊 4 米。</p>
+    <div class="price-box">舖設: 36 × 300 = 10,800<br>路緣: 10 × 300 = 3,000<br>切割收邊: 4 × 250 = 1,000<br>小計: 14,800</div>
+
+    <h3>第四步:難度加成(單價表只是起點)</h3>
+    <p>如果現場勘查發現地不平、要多整地,或進出料不方便,往上加價。假設抓 10% 難度費:</p>
+    <div class="price-box">14,800 × 10% = 1,480<br>報價: 14,800 + 1,480 = 16,280</div>
+    <p>心法回顧:抓 10% 就是小數點左移一位,不用心算到頭痛。</p>
+
+    <h3>第五步:決定怎麼分工(這裡就是你的本行了)</h3>
+    <p>案子不大,你可以自己帶 2 個工人做 2 天做完。</p>
+    <div class="price-box">2人 × 2天 = 4工<br>4工 × 1500 = 6,000元工資</div>
+    <p>你的報價 16,280,扣掉工資 6,000、材料成本(這裡先不列,實際要另外抓),剩下的才是你的毛利。</p>
+    <p>如果案子夠大,你可以整段「數量」分包給熟識的工頭,你只要出報價、簽約、收款,工頭自己去調度人力——這就是阿心的角色,也是你在仲介業每天在做的「服務費 vs 實際成本」邏輯,只是換了計價單位。</p>
+
+    <h3>第六步:簽約</h3>
+    <p>口頭報完價,對方同意,一定要簽字留紀錄,寫清楚金額、付款方式(通常完工現金付現)、大概工期。這一步不能省,岳父吃過虧才特別交代這件事。</p>
+
+    <div class="callout">這六步走完,你會發現每一步都是你已經學過的東西:丈量用心算技巧、報價用計算機分頁的公式、分工判斷用仲介邏輯、簽約是紀律不是選項。下次岳父在工地上跟你講解一個新案子,你可以照著這六步在腦中對一次,會比死記知識點更容易上手。</div>
+  </div>
+</div>
+
+<!-- ===== 國際借鏡 ===== -->
+<div id="view-global" class="view">
+  <div class="notes-wrap">
+    <h2>國際借鏡:同行怎麼把小工程行做大</h2>
+    <p class="lede">2026/08/14 研究整理。看北美、英國、日本的鋪面/造園同業怎麼做,分析哪些值得學、哪些不用勉強照搬,再回頭給出具體的技能準備清單。</p>
+
+    <h3>1. 品牌認證/經銷網絡模式</h3>
+    <p>北美 Belgard、Unilock,英國 Marshalls 這些連鎖磚材料品牌,都建立了「授權承包商」制度:工班通過培訓+品質稽核,可以掛品牌名接單,品牌方還會把上門詢價的客戶轉介過去。ICPI(北美連鎖磚協會)認證課程開辦以來已有超過2.5萬名安裝工完成,門檻是2天課程+考試75分以上+累積1萬平方英尺施工經驗;英國 Marshalls Register 只收約130家全國認證商,篩選嚴格,換來的是品牌背書的10年保固跟穩定案源。</p>
+    <div class="callout">台灣觀察:目前沒看到本地有這種規模的認證生態圈,不用勉強找一個加入。但「品質背書換案源」這個邏輯可以自己做小規模版本——把「跟過幾年、做過哪些案子」做成有公信力的作品集,等於自製一張小型認證。</div>
+
+    <h3>2. 銷售工具:3D/AR視覺化</h3>
+    <p>Belgard免費提供3D擬真渲染圖給承包商用來成交,業界資料顯示有設計渲染圖的提案,成交率是純照片提案的2.5倍。像 YARD、DreamzAR 這類App,能讓業務員在客戶家門口用手機AR技術,直接把設計「疊」在客戶現場的院子上給他們看。</p>
+    <div class="callout">台灣機會:這類工具便宜(多半免費或月費幾百元),學習門檻不高,可以直接套用,已經加進 AI工具箱那個分頁。</div>
+
+    <h3>3. 系統化口碑經營</h3>
+    <p>做得起來的同行不是被動等口碑,而是「每完工一個案子就系統化去要評論」,並且會做「案例頁」——每個案子附前後對比照、材質說明、大概預算範圍、所在城市,拿來優化在地搜尋(local SEO)。</p>
+    <div class="callout">台灣觀察:岳父現在的做法(「植入性行銷」、用案例照片說服新客戶)已經抓到精髓,但目前是「口袋裡的照片」,不是「網路上找得到的作品集」。如果要擴大案源、不只靠客戶介紹客戶,下一步是把案例整理成外部看得到的作品集網站,再申請 Google 商家檔案——這是現在這份相簿的自然延伸,但要先取得業主/岳父同意才能把案場照片公開,這不是我能自己決定的事。</div>
+
+    <h3>4. 產業結構觀察:日本的啟示</h3>
+    <p>日本造園業目前最大的挑戰是「老師傅凋零、接班人難找」,業界協會正在積極推動接班人培育,而且日本造園業本來就以「師傅獨立開小工作室」為常態,不是特例。</p>
+    <div class="callout">這個結構性問題台灣大機率也在發生——岳父正是那個「資深師傅」角色,你現在在做的事情正好補上這個產業的接班缺口。不是巧合,是你站在一個有結構性需求的位置上。</div>
+
+    <h3>5. 政策順風:透水鋪面</h3>
+    <p>全球透水混凝土鋪面市場預估到2030年成長到98.6億美元,年複合成長率5.6%。台灣因為淹水跟熱島效應,內政部國土管理署已經有市區道路透水性鋪面使用手冊,台北市也在推動「海綿城市」相關工程,人行道、開放式停車場、輕度車流道路都是適用範圍。</p>
+    <div class="callout">建議:如果要選一個「專精方向」讓自己在同行裡有差異化,透水鋪面/生態工法是一個有政策支持、需求會持續成長的選擇,值得列入丙級造園景觀技術士考照之外,額外深化的方向——政府公家案裡這類工項只會越來越多。</div>
+
+    <h3>事業準備技能清單(依優先順序排)</h3>
+    <p><b style="color:var(--brick);">現在就能做、免費——</b>申請 Google 商家檔案,不用等到獨立接案才做;開始有意識地收集每個案子的前後對比照(你已經在做)。</p>
+    <p><b style="color:var(--brick);">短期(1-3個月)——</b>學一款AR設計App(如 DreamzAR),下次觀摩工地順便練習用手機比劃給自己看,習慣這個工具。</p>
+    <p><b style="color:var(--brick);">中期(獨立接案準備期)——</b>深化透水鋪面/生態工法知識,這塊政策支持強,是差異化定位的機會;開始整理2-3個代表作案例(要先問過岳父/業主同意才能公開),準備一個簡單的作品集網頁。</p>
+    <p><b style="color:var(--brick);">長期(案量穩定後)——</b>導入基礎報價/請款管理軟體(元欣工程估價系統,或先試用免費版的 Jobber 類工具);考慮跟固定配合的建材行談長期合作關係,即使台灣沒有 Belgard 那種規模的品牌生態,同樣的「品質背書換案源」邏輯還是能自己談出一個小規模版本。</p>
+
+    <div class="callout warn">⚠️ 這份分析裡引用的公司名稱、認證制度、市場數字都來自公開資料搜尋整理,附在下面 Sources。台灣本地是否有對應的連鎖磚品牌認證體系,目前查不到明確資料,不確定就不硬掰,如果你知道有這類東西存在,可以再告訴我補進去。</div>
+  </div>
+</div>
+
+<!-- ===== AI 工具箱 ===== -->
+<div id="view-tools" class="view">
+  <div class="notes-wrap">
+    <h2>能幫你事半功倍的工具</h2>
+    <p class="lede">不是所有工具都要馬上用,案量還小的時候前三個免費工具就很夠用了。</p>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">Claude / ChatGPT 手機App</span><span class="tc-tag free">免費可用</span></div>
+      <div class="tc-desc">現場拍照問「這是什麼工法」「這個尺寸算下來大概多少錢合理嗎」,或是把你口頭報出來的數字丟給它,幫你整理成一份像樣的報價單文字。</div>
+      <div class="tc-use">用途:估價輔助、口語轉文件、隨時問問題</div>
+    </div>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">手機內建測距/量測 App</span><span class="tc-tag free">免費、內建</span></div>
+      <div class="tc-desc">iPhone 內建「測距」App(Measure),Android 用 Google「量測」App(需支援 ARCore)或 AirMeasure。現場沒帶捲尺時,用手機鏡頭抓長度、面積的概數。</div>
+      <div class="tc-use">用途:現場沒帶捲尺時的應急丈量</div>
+    </div>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">拍照計數 App(如 Count This)</span><span class="tc-tag free">免費</span></div>
+      <div class="tc-desc">用相機辨識畫面裡有幾塊磚、幾根樁、幾件材料,不用一個一個手動數,盤點材料或核對進料數量時省時間。</div>
+      <div class="tc-use">用途:材料盤點、核對進料數量</div>
+    </div>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">政府電子採購網(web.pcc.gov.tw)</span><span class="tc-tag free">免費、官方</span></div>
+      <div class="tc-desc">案量還小的時候可以自己上去查有沒有適合投標的公告,尤其是小額採購(15萬以下)的案子,機關可能直接洽廠商,先讓自己被看到。</div>
+      <div class="tc-use">用途:找政府標案案源</div>
+    </div>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">元欣工程估價管理系統</span><span class="tc-tag">付費軟體</span></div>
+      <div class="tc-desc">台灣在地的工程估價/合約/請款管理軟體,案子多了以後可以考慮,統一管理估價單、合約、應收帳款,不用再靠 Excel 手動兜。</div>
+      <div class="tc-use">用途:案量變多後的正式估價/請款管理</div>
+    </div>
+    <div class="tool-card">
+      <div class="tc-head"><span class="tc-name">PCCES(公共工程雲端服務網)</span><span class="tc-tag">官方、進階</span></div>
+      <div class="tc-desc">政府公共工程常用的預算書編製軟體。如果之後要跟政府機關或大型營造廠對接正式的工程預算書,是業界通用的工具,算比較進階的階段才會用到。</div>
+      <div class="tc-use">用途:承接較大型公共工程時的預算編列</div>
+    </div>
+    <div class="callout">上面這些工具,案量小的時候前三個(AI助理+測距App+計數App)完全免費就能覆蓋大部分需求。等案子穩定變多,再考慮付費的估價管理軟體。</div>
+  </div>
+</div>
+
+<!-- ===== 每日題目 ===== -->
+<div id="view-quiz" class="view">
+  <div class="notes-wrap">
+    <h2>每日題目</h2>
+    <p class="lede">今天固定出 5 題(明天會換一批),想多練可以按「換一批」重抽。點題目下面的按鈕看答案。</p>
+    <div class="quiz-controls" id="quizChips"></div>
+    <div id="quizList"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">✕</button>
+  <button class="lb-prev" id="lbPrev">‹</button>
+  <img id="lbImg" src="" alt="">
+  <div class="lb-caption" id="lbCaption"></div>
+  <button class="lb-next" id="lbNext">›</button>
+</div>
+
+<script src="gallery_data.js"></script>
+<script>
+let currentFolder = GALLERY_DATA[0].folder;
+let currentFiles = [];
+let currentIdx = 0;
+
+function setTabCount(){
+  const total = GALLERY_DATA.reduce((s,d)=>s+d.count,0);
+  document.getElementById('galleryTabBtn').textContent = `相簿(${total}張,已去除重複)`;
+}
+
+// 相簿一次全部往下排,不用點工地切換
+function renderFeed(){
+  const feed = document.getElementById('feed');
+  feed.innerHTML = GALLERY_DATA.map(d => `
+    <div class="folder-section" id="folder-${d.folder}">
+      <div class="panel-header">
+        <h2><span class="dot ${d.confidence}"></span>${d.title}<span class="folder-count">${d.count}張</span></h2>
+        <p>${d.desc}</p>
+        ${d.facts.length? `<ul class="facts">${d.facts.map(f=>`<li>${f}</li>`).join('')}</ul>`:''}
+      </div>
+      <div class="grid">
+        ${d.files.map((f,i)=>`<div class="thumb" data-folder="${d.folder}" data-i="${i}"><img loading="lazy" decoding="async" src="photos/${d.folder}/${f}" alt="${f}"></div>`).join('')}
+      </div>
+    </div>`).join('');
+  feed.addEventListener('click', (e)=>{
+    const thumb = e.target.closest('.thumb');
+    if(!thumb) return;
+    openLightbox(thumb.dataset.folder, parseInt(thumb.dataset.i));
+  });
+}
+
+function openLightbox(folder, i){
+  currentFolder = folder;
+  currentFiles = GALLERY_DATA.find(x=>x.folder===folder).files;
+  currentIdx = i;
+  document.getElementById('lightbox').classList.add('open');
+  updateLightbox();
+}
+function updateLightbox(){
+  const f = currentFiles[currentIdx];
+  document.getElementById('lbImg').src = `photos/${currentFolder}/${f}`;
+  document.getElementById('lbCaption').textContent = `${f}  (${currentIdx+1} / ${currentFiles.length})`;
+}
+document.getElementById('lbClose').addEventListener('click', ()=>document.getElementById('lightbox').classList.remove('open'));
+document.getElementById('lightbox').addEventListener('click', (e)=>{ if(e.target.id==='lightbox') e.currentTarget.classList.remove('open'); });
+document.getElementById('lbPrev').addEventListener('click', ()=>{ currentIdx=(currentIdx-1+currentFiles.length)%currentFiles.length; updateLightbox(); });
+document.getElementById('lbNext').addEventListener('click', ()=>{ currentIdx=(currentIdx+1)%currentFiles.length; updateLightbox(); });
+document.addEventListener('keydown', (e)=>{
+  if(!document.getElementById('lightbox').classList.contains('open')) return;
+  if(e.key==='Escape') document.getElementById('lightbox').classList.remove('open');
+  if(e.key==='ArrowLeft') document.getElementById('lbPrev').click();
+  if(e.key==='ArrowRight') document.getElementById('lbNext').click();
+});
+// 手機滑動切換上一張/下一張
+(function(){
+  const lb = document.getElementById('lightbox');
+  let touchStartX = 0;
+  lb.addEventListener('touchstart', (e)=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+  lb.addEventListener('touchend', (e)=>{
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if(Math.abs(dx) < 40) return;
+    if(dx < 0) document.getElementById('lbNext').click(); else document.getElementById('lbPrev').click();
+  }, {passive:true});
+})();
+
+// tabs
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+setTabCount();
+renderFeed();
+
+// ===== quiz =====
+const QUESTIONS = [
+  {cat:'術語', q:'「數量」在這行的意思是什麼?', a:'按面積(m²)計價的分包工程量', ex:'不是件數也不是天數,單位是平方公尺。'},
+  {cat:'術語', q:'「工」是什麼單位?', a:'一個工人做一天 = 1工(man-day)', ex:'算工資的基本單位。'},
+  {cat:'術語', q:'「外叫」是什麼意思?', a:'臨時調度外面的工人來支援', ex:'自己班底人力不夠時的做法。'},
+  {cat:'術語', q:'「代工施做」是什麼意思?', a:'只出人力不出料的純工資分包', ex:'材料由業主或其他廠商提供,你只負責施工。'},
+  {cat:'術語', q:'「路緣」指的是什麼?', a:'道路/鋪面的邊界收邊(緣石)', ex:'把鋪面的邊界收齊。'},
+  {cat:'術語', q:'1坪等於多少 m²?', a:'約 3.3058 m²(估算用3.3)', ex:'業主報坪數,你要能秒算成m²。'},
+  {cat:'術語', q:'「雛形」跟「圖面」有什麼不同?', a:'雛形是初步草圖,圖面是精確的施工/報價平面圖', ex:'雛形能判斷大概方向,圖面才能精確報價。'},
+  {cat:'術語', q:'「石籠」(蛇籠)是什麼?', a:'鐵網籠裝填石塊,用於護坡擋土', ex:'常見於河堤、邊坡景觀化工程。'},
+  {cat:'術語', q:'「鍍鋅」的作用是什麼?', a:'金屬鍍鋅防鏽處理', ex:'常用在石籠鐵網、鋼構件上防止生鏽。'},
+  {cat:'術語', q:'「收尾」指的是工程的哪個階段?', a:'工程進入完工前的最後修整階段', ex:'細節收整、清潔,準備驗收。'},
+  {cat:'計算', q:'30坪等於幾 m²(用3.3估算)?', a:'99 m²', ex:'30×3=90,30×0.3=9,90+9=99。'},
+  {cat:'計算', q:'一戶車道用20塊磚×20塊磚,單塊磚邊長0.3m,面積是多少?', a:'36 m²', ex:'20×0.3=6,6×6=36。'},
+  {cat:'計算', q:'舖設100 m²,單價300元/m²,總價多少?', a:'30,000元', ex:'乘300=先乘3再補兩個0:100×3=300→30,000。'},
+  {cat:'計算', q:'路緣長40米,單價300元/延米,總價多少?', a:'12,000元', ex:'40×3=120→12,000。'},
+  {cat:'計算', q:'切割收邊60米,單價250元/延米,總價多少?', a:'15,000元', ex:'乘250=先乘1000再除4:60,000÷4=15,000。'},
+  {cat:'計算', q:'5個工人做3天,日薪1500元,總工資多少?', a:'22,500元', ex:'5×3=15工,15×1500=22,500。'},
+  {cat:'計算', q:'分包總價10萬,工人工資花3萬,利潤是多少?', a:'7萬元', ex:'100,000−30,000=70,000。'},
+  {cat:'計算', q:'上題(分包10萬、工資3萬)的利潤率是多少%?', a:'70%', ex:'70,000÷100,000=70%。'},
+  {cat:'計算', q:'圓形廣場半徑5米,面積約多少 m²(π用3估)?', a:'約75 m²', ex:'5×5×3=75。'},
+  {cat:'計算', q:'圓形廣場半徑5米,周長約多少米(用6.3估)?', a:'約31.5米', ex:'5×6.3=31.5。'},
+  {cat:'計算', q:'量到285公分,換算成公尺是多少?', a:'2.85米', ex:'公分數字小數點左移兩位就是公尺。'},
+  {cat:'計算', q:'18×22,用差平方法怎麼算?', a:'396', ex:'湊中間值20:20×20−2×2=400−4=396。'},
+  {cat:'計算', q:'36,000元的報價要加15%難度費,加價後大約多少?', a:'約41,400元', ex:'10%=3,600,5%=1,800,合計加5,400。'},
+  {cat:'計算', q:'48乘以150,用速算法怎麼算?', a:'7,200', ex:'48×100=4,800,一半是2,400,合計7,200。'},
+  {cat:'計算', q:'一戶車道36m²,估5戶加上入口廣場,總施作面積大概怎麼抓?', a:'先算 5戶×36=180 m²,再加上入口廣場酌量估,概估80-100坪上下', ex:'這是報價前的粗抓,實際仍要依圖面精算。'},
+  {cat:'工法', q:'弧形/圓形鋪面施工,是「圓從內而外」還是「圓從外而內」?', a:'圓從內而外', ex:'先做內圓再往外擴,才能對齊。'},
+  {cat:'工法', q:'階梯施工順序是「下而上」還是「上而下」?', a:'下而上', ex:'由下往上砌,是這個案子的實際做法。'},
+  {cat:'工法', q:'護坡用的鐵籠為什麼要鍍鋅?', a:'防止風吹日曬雨淋生鏽', ex:'鋅鍍層是防鏽處理。'},
+  {cat:'工法', q:'石籠護坡工程,鐵籠通常是自己做還是外包供應/施作?', a:'通常是外包(代施工)給專門廠商', ex:'不是現場土法製作。'},
+  {cat:'工法', q:'鋪面基本結構由下到上大致是哪5層?', a:'路基整地夯實→級配料鋪設夯實→粗砂整平層→鋪磚→填縫夯實', ex:'每層都要確實做,才不會日後不均勻沉陷。'},
+  {cat:'工法', q:'為什麼不同工項對下雨天的敏感度不一樣?', a:'室內/有遮蔽的工程(如車站)雨天能做,露天工程雨天不能做', ex:'排程要跟著天氣彈性調整,不能死守計畫。'},
+  {cat:'工法', q:'材料不夠時,現場常見的調度做法是什麼?', a:'先切去另一個有料的案場做,等補料再回頭', ex:'多案並行時不讓工人閒置的邏輯。'},
+  {cat:'工法', q:'切割收邊為什麼單價比一般舖設高?', a:'轉角、異形收邊費工費時,難度高', ex:'精修工序,不是純粗工。'},
+  {cat:'工法', q:'洗石子工法的特徵是什麼?', a:'讓石粒外露的水泥表面工法', ex:'常用於景觀牆面裝飾。'},
+  {cat:'工法', q:'為什麼報價前要先拿到細部圖面?', a:'沒有圖面只能抓概數,有圖面才能報準確價、判斷施工難度', ex:'圖面是報價的參考依據。'},
+  {cat:'產業法規', q:'丙級造園景觀技術士的報考資格是什麼?', a:'年滿15歲或國民中學畢業', ex:'分學科+術科,勞動部技能檢定中心主辦。'},
+  {cat:'產業法規', q:'台灣行號(商業登記)月銷售額多少以下可以免辦登記?', a:'每月銷售額未達10萬元', ex:'超過就要辦理商業登記。'},
+  {cat:'產業法規', q:'行號資本額多少以上需要提出資金證明?', a:'25萬元以上', ex:'25萬以下通常不用附證明文件。'},
+  {cat:'產業法規', q:'政府採購的「小額採購」門檻是多少?', a:'15萬元以下', ex:'公告金額150萬的十分之一。'},
+  {cat:'產業法規', q:'小額採購(15萬以下)的招標方式有什麼特別?', a:'機關可以不經公開招標,直接洽廠商採購', ex:'這是很多小型工程行接得到公所案子的原因。'},
+  {cat:'產業法規', q:'承接政府工程通常需要準備哪張憑證來請款?', a:'統一發票', ex:'跟私人案的現金付現不同。'},
+  {cat:'產業法規', q:'公共工程完工後通常還有什麼義務期間?', a:'保固期(依合約約定,常見約1年)', ex:'期間如有損壞需回頭維修。'},
+  {cat:'產業法規', q:'承包政府工程時,「監造單位」的角色是什麼?', a:'監督工程品質、確認施工是否符合設計圖說', ex:'通常是建築師事務所或工程顧問公司。'},
+  {cat:'產業法規', q:'公共意外責任險為什麼重要?', a:'獨立接案後現場出意外的風險要自己承擔,投保才能分散風險', ex:'開始收案前務必投保。'},
+  {cat:'產業法規', q:'案件報價完成後,一定要做什麼才能避免糾紛?', a:'簽約', ex:'白紙黑字寫清楚,避免事後對方不認帳、錢收不回來。'},
+  {cat:'經營管理', q:'阿新/阿心的分包模式裡,誰負責先墊付工人的薪水?', a:'工頭(阿心)自己先付,再從分包總價裡扣回來', ex:'業主(岳父)只看最終結果,不管過程調度。'},
+  {cat:'經營管理', q:'業務推展最有效的方法是什麼?', a:'收集好的案例做「植入性行銷」,用實績照片說服新客戶', ex:'勝過純粹的話術推銷,成交率能拉到很高。'},
+  {cat:'經營管理', q:'為什麼「客戶介紹客戶」是最省力的業務管道?', a:'靠口碑自然轉介,不用主動開發,成本最低', ex:'做到後期案源會自己滾動。'},
+  {cat:'經營管理', q:'分包(數量制)跟日薪制,哪一種工頭承擔的風險比較大、但也可能賺比較多?', a:'分包(數量)制', ex:'賺賠自己扛,但做得快做得好利潤空間更大。'},
+  {cat:'經營管理', q:'用人力仲介的邏輯類比,分包工頭的角色最像仲介業裡的誰?', a:'派遣站的班長/現場管理人', ex:'介於統包工程行跟實際工人之間,賺的是分包價跟實際工資的價差。'},
+  {cat:'總複習', q:'新手總複習案例裡,一戶車道用數磚塊法(20塊×20塊、單塊0.3m)抓出的面積是多少?', a:'36 m²', ex:'20×0.3=6,6×6=36。'},
+  {cat:'總複習', q:'同一案例,舖設36m²、路緣10米、切割收邊4米,三項報價合計(未加難度費)是多少?', a:'14,800元', ex:'舖設10,800+路緣3,000+切割收邊1,000=14,800。'},
+  {cat:'總複習', q:'同一案例加10%難度費後,最終報價是多少?', a:'16,280元', ex:'14,800×10%=1,480,14,800+1,480=16,280。'},
+  {cat:'總複習', q:'同一案例,2人做2天、日薪1500,總工資是多少?', a:'6,000元', ex:'2×2=4工,4×1500=6,000。'},
+  {cat:'總複習', q:'模擬範例裡,植草磚舖設面積是多少m²?', a:'600 m²', ex:'植草磚因為工序多(舖設+回填+碎石整平)是這類案子裡金額最大的單項工程。'},
+  {cat:'總複習', q:'模擬範例合約總價(含稅)是多少?', a:'478,485元', ex:'小計455,700元+5%稅金22,785元。'},
+  {cat:'總複習', q:'為什麼同一份合約裡三種「緣石」的單價都不一樣?', a:'規格不同(植栽槽緣石/收邊緣石/人行道緣石),尺寸跟工法不同單價就不同', ex:'真實報價不是套一個公式,要看規格。'},
+  {cat:'計算', q:'圓形廣場直徑10米,用岳父的算法(直徑×直徑×0.785)面積是多少?', a:'78.5 m²', ex:'10×10×0.785=78.5。'},
+  {cat:'計算', q:'200㎡鋪面,厚度10公分,要叫多少方的預拌車?', a:'20方', ex:'10cm÷100=0.1m,200×0.1=20方。'},
+  {cat:'計算', q:'岳父的柱牆算料題:柱距3.25米、牆長100米,用「中心距」概算大概幾根柱子?', a:'約31根', ex:'100÷3.25=30.77,進位取31。'},
+  {cat:'工法', q:'岳父報營造廠、發包給阿心(外籍工班)、發包給台灣工班,三個價格分別是多少?', a:'報營造廠300元/㎡,發包阿心60元/㎡,發包台灣工班120元/㎡', ex:'同樣是純工不帶料,價差大小反映產能與風險承擔不同。'},
+  {cat:'工法', q:'鋪面工程的三個單位M、㎡、m³分別算什麼?', a:'M算線(路緣石/收邊),㎡算面(鋪面磚),m³算體積(級配/砂/混凝土,用車載的)', ex:'同一個「40米」在不同工項意思不一樣,要看上下文。'},
+  {cat:'工法', q:'現場糾錯的判斷線是什麼?', a:'這個瑕疵事後補得回來嗎——補不回來的當場說,補得回來的收尾一起講', ex:'級配、洩水坡、PC厚度這類補不回來的問題,一定要當場講。'},
+  {cat:'工法', q:'隱蔽工程(級配、鋼線網、PC)覆蓋前要做什麼?', a:'主動通知監造請驗,自己也要先拍照(照片裡放尺)', ex:'被蓋住前沒量到,之後就永遠量不到了。'},
+  {cat:'工法', q:'圓形放射鋪面跟一般區域鋪面,施工方向剛好相反,分別是?', a:'圓形放射:內→外(基準在圓心);一般區域:外→內(緣石先做當基準)', ex:'通則是先固定不能動的基準,再填跟著基準走的部分。'},
+  {cat:'產業法規', q:'商業登記跟營造業登記有什麼差別,為什麼重要?', a:'一般營造業移工配額發給有營造業登記的營造廠,商業登記的下包很可能不具申請資格', ex:'岳父的公司是商業登記,不是營造業登記,這件事直接關係到未來能不能自己申請移工。'},
+  {cat:'經營管理', q:'工班分包時必問的三個合規問題是什麼?', a:'工頭身分能否合法承攬?工人勞健保投在哪?職災責任算誰的?', ex:'如果工頭法律上只能受僱,他找來的工人的雇主責任可能會落到分包上游身上。'},
+];
+const CATS = ['全部', ...Array.from(new Set(QUESTIONS.map(q=>q.cat)))];
+let activeCat = '全部';
+function seedFromDate(){
+  const d = new Date();
+  const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  let h = 0;
+  for(let i=0;i<key.length;i++){ h = (h*31 + key.charCodeAt(i)) >>> 0; }
+  return h;
+}
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pickQuestions(n, seedFn){
+  const pool = QUESTIONS.map((q,i)=>({...q,i})).filter(q=> activeCat==='全部' || q.cat===activeCat);
+  const arr = pool.slice();
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(seedFn()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr.slice(0, Math.min(n, arr.length));
+}
+function renderChips(){
+  const box = document.getElementById('quizChips');
+  box.innerHTML = CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')
+    + `<button class="shuffle-btn" id="shuffleBtn">🔀 換一批</button>`;
+  box.querySelectorAll('.chip').forEach(b=>{
+    b.addEventListener('click', ()=>{ activeCat = b.dataset.cat; renderChips(); renderDaily(); });
+  });
+  document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+    renderList(pickQuestions(5, Math.random));
+  });
+}
+function renderList(list){
+  const box = document.getElementById('quizList');
+  box.innerHTML = list.map((q,idx)=>`
+    <div class="q-card">
+      <div class="q-cat">${q.cat}</div>
+      <div class="q-text">${idx+1}. ${q.q}</div>
+      <button class="reveal-btn" data-idx="${idx}">看答案</button>
+      <div class="answer-box" id="ans-${idx}">
+        <div class="a-val">${q.a}</div>
+        <div class="a-explain">${q.ex}</div>
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('.reveal-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('ans-'+btn.dataset.idx).classList.toggle('shown');
+    });
+  });
+}
+function renderDaily(){ renderList(pickQuestions(5, mulberry32(seedFromDate()))); }
+renderChips();
+renderDaily();
+
+// ===== calculator =====
+function fmt(n){ if(!isFinite(n)) return '—'; return n.toLocaleString('zh-TW', {maximumFractionDigits:1}); }
+function fmtInt(n){ if(!isFinite(n)) return '—'; return Math.round(n).toLocaleString('zh-TW'); }
+const PF = 3.3058;
+const pingP = document.getElementById('ping_p'), pingM = document.getElementById('ping_m');
+pingP.addEventListener('input', ()=>{ if(pingP.value==='') { pingM.value=''; return;} pingM.value = (parseFloat(pingP.value)*PF).toFixed(2); });
+pingM.addEventListener('input', ()=>{ if(pingM.value==='') { pingP.value=''; return;} pingP.value = (parseFloat(pingM.value)/PF).toFixed(2); });
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  if(btn.dataset.mode !== 'area-m' && btn.dataset.mode !== 'area-brick') return;
+  btn.addEventListener('click', ()=>{
+    btn.parentElement.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const isBrick = btn.dataset.mode === 'area-brick';
+    document.getElementById('area-m-panel').style.display = isBrick ? 'none' : 'block';
+    document.getElementById('area-brick-panel').style.display = isBrick ? 'block' : 'none';
+    computeArea();
+  });
+});
+function computeArea(){
+  const brickMode = document.getElementById('area-brick-panel').style.display !== 'none';
+  let m2;
+  if(brickMode){
+    const nl = parseFloat(document.getElementById('brick_nl').value);
+    const nw = parseFloat(document.getElementById('brick_nw').value);
+    const s = parseFloat(document.getElementById('brick_s').value);
+    m2 = nl*s * (nw*s);
+  } else {
+    const l = parseFloat(document.getElementById('area_l').value);
+    const w = parseFloat(document.getElementById('area_w').value);
+    m2 = l*w;
+  }
+  document.getElementById('area_out_m2').innerHTML = fmt(m2) + '<span class="unit">m²</span>';
+  document.getElementById('area_out_ping').innerHTML = fmt(m2/PF) + '<span class="unit">坪</span>';
+}
+['area_l','area_w','brick_nl','brick_nw','brick_s'].forEach(id=>document.getElementById(id).addEventListener('input', computeArea));
+function computeCircle(){
+  const r = parseFloat(document.getElementById('circ_r').value);
+  const degInput = document.getElementById('circ_deg').value;
+  const deg = degInput === '' ? 360 : parseFloat(degInput);
+  const frac = deg/360;
+  const area = Math.PI * r * r * frac;
+  const len = 2 * Math.PI * r * frac;
+  document.getElementById('circ_out_area').innerHTML = fmt(area) + '<span class="unit">m²</span>';
+  document.getElementById('circ_out_len').innerHTML = fmt(len) + '<span class="unit">m</span>';
+}
+['circ_r','circ_deg'].forEach(id=>document.getElementById(id).addEventListener('input', computeCircle));
+function computeVolume(){
+  const area = parseFloat(document.getElementById('vol_area').value)||0;
+  const thickCm = parseFloat(document.getElementById('vol_thick').value)||0;
+  const vol = area * (thickCm/100);
+  document.getElementById('vol_out').innerHTML = fmt(vol) + '<span class="unit">方(m³)</span>';
+  document.getElementById('vol_out_trips').innerHTML = (vol>0 ? Math.ceil(vol/7) : '—') + '<span class="unit">趟</span>';
+}
+['vol_area','vol_thick'].forEach(id=>document.getElementById(id).addEventListener('input', computeVolume));
+function computeQuote(){
+  const paveArea = parseFloat(document.getElementById('q_pave_area').value)||0;
+  const pavePrice = parseFloat(document.getElementById('q_pave_price').value)||0;
+  const curbLen = parseFloat(document.getElementById('q_curb_len').value)||0;
+  const curbPrice = parseFloat(document.getElementById('q_curb_price').value)||0;
+  const cutLen = parseFloat(document.getElementById('q_cut_len').value)||0;
+  const cutPrice = parseFloat(document.getElementById('q_cut_price').value)||0;
+  const pave = paveArea*pavePrice, curb = curbLen*curbPrice, cut = cutLen*cutPrice;
+  const total = pave+curb+cut;
+  document.getElementById('q_out').innerHTML = fmtInt(total) + '<span class="unit">元</span>';
+  document.getElementById('q_out_sub').textContent = `舖設 ${fmtInt(pave)} + 路緣 ${fmtInt(curb)} + 切割收邊 ${fmtInt(cut)}`;
+}
+['q_pave_area','q_pave_price','q_curb_len','q_curb_price','q_cut_len','q_cut_price'].forEach(id=>document.getElementById(id).addEventListener('input', computeQuote));
+function computeWage(){
+  const n = parseFloat(document.getElementById('w_n').value)||0;
+  const d = parseFloat(document.getElementById('w_d').value)||0;
+  const r = parseFloat(document.getElementById('w_r').value)||0;
+  const gong = n*d;
+  document.getElementById('w_out').innerHTML = fmtInt(gong*r) + '<span class="unit">元</span>';
+  document.getElementById('w_out_sub').textContent = `共 ${fmt(gong)} 工`;
+}
+['w_n','w_d','w_r'].forEach(id=>document.getElementById(id).addEventListener('input', computeWage));
+function computeMargin(){
+  const total = parseFloat(document.getElementById('m_total').value)||0;
+  const cost = parseFloat(document.getElementById('m_cost').value)||0;
+  const profit = total-cost;
+  document.getElementById('m_out').innerHTML = fmtInt(profit) + '<span class="unit">元</span>';
+  document.getElementById('m_out_pct').innerHTML = (total? fmt(profit/total*100):'—') + '<span class="unit">%</span>';
+}
+['m_total','m_cost'].forEach(id=>document.getElementById(id).addEventListener('input', computeMargin));
+
+// ===== 材料需求量計算 =====
+document.querySelectorAll('#view-calc .mode-toggle .mode-btn').forEach(btn=>{
+  if(btn.dataset.mode !== 'mat-straight' && btn.dataset.mode !== 'mat-curve') return;
+  btn.addEventListener('click', ()=>{
+    btn.parentElement.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('mat_loss').value = btn.dataset.mode === 'mat-curve' ? 17.5 : 8;
+    computeMaterial();
+  });
+});
+function computeMaterial(){
+  const area = parseFloat(document.getElementById('mat_area').value)||0;
+  const brick = parseFloat(document.getElementById('mat_brick').value)||0;
+  const loss = parseFloat(document.getElementById('mat_loss').value)||0;
+  const brickArea = brick*brick;
+  const baseCount = brickArea>0 ? area/brickArea : 0;
+  const totalCount = baseCount * (1+loss/100);
+  document.getElementById('mat_out_base').innerHTML = (baseCount? Math.ceil(baseCount):'—') + '<span class="unit">塊</span>';
+  document.getElementById('mat_out_total').innerHTML = (totalCount? Math.ceil(totalCount):'—') + '<span class="unit">塊</span>';
+}
+['mat_area','mat_brick','mat_loss'].forEach(id=>document.getElementById(id).addEventListener('input', computeMaterial));
+
+// ===== 柱子間隔計算 =====
+function computeColumn(){
+  const len = parseFloat(document.getElementById('col_len').value)||0;
+  const gap = parseFloat(document.getElementById('col_gap').value)||0;
+  const count = gap>0 ? Math.ceil(len/gap)+1 : 0;
+  document.getElementById('col_out').innerHTML = (count||'—') + '<span class="unit">根</span>';
+  document.getElementById('col_out_sub').textContent = count ? `${len}m ÷ ${gap}m,無條件進位再加頭尾各一根` : '';
+}
+['col_len','col_gap'].forEach(id=>document.getElementById(id).addEventListener('input', computeColumn));
+
+// ===== 出題練習產生器 =====
+function rnd(min,max,step){ step = step||1; const n = Math.round((min+Math.random()*(max-min))/step)*step; return n; }
+const PRACTICE_TYPES = {
+  area: { label:'面積(矩形)', gen(){
+    const l=rnd(3,15,0.5), w=rnd(3,15,0.5), ans=+(l*w).toFixed(2);
+    return {q:`一塊鋪面長 ${l} 米、寬 ${w} 米,面積是多少?`, a:`${ans} m²`, steps:`${l} × ${w} = ${ans} m²`, mantra:'口訣:「長乘寬,面積上」——矩形面積不管怎麼擺,就是兩邊長度相乘。'};
+  }},
+  brick: { label:'面積(數磚塊)', gen(){
+    const nl=rnd(10,35), nw=rnd(10,35), s=[0.2,0.25,0.3,0.4][rnd(0,3)];
+    const l=+(nl*s).toFixed(2), w=+(nw*s).toFixed(2), ans=+(l*w).toFixed(2);
+    return {q:`車道大概能排 ${nl} 塊磚 × ${nw} 塊磚,每塊磚邊長 ${s} 米,面積大概是多少?`, a:`約 ${ans} m²`, steps:`${nl}×${s}=${l}m(一邊長度)\n${nw}×${s}=${w}m(另一邊長度)\n${l}×${w}=${ans} m²`, mantra:'口訣:「數磚乘邊長,長寬都一樣」——先算出兩邊各是幾公尺,再相乘。不用捲尺量整片地也能抓概數。'};
+  }},
+  circle: { label:'圓形面積', gen(){
+    const d=rnd(4,20,0.5), area=+(d*d*0.785).toFixed(2), circ=+(d*3.14).toFixed(2);
+    return {q:`一個圓形廣場直徑 ${d} 米,面積跟周長(收邊長度)各是多少?`, a:`面積約 ${area} m²,周長約 ${circ} m`, steps:`面積:${d}×${d}×0.785=${area} m²\n周長:${d}×3.14=${circ} m`, mantra:'口訣:「直徑平方乘0.785」算面積,「直徑乘3.14」算周長。現場量直徑要找最長那條線,不是找圓心。'};
+  }},
+  volume: { label:'體積換算', gen(){
+    const area=rnd(50,300,5), thick=[5,8,10,15,20][rnd(0,4)];
+    const vol=+(area*thick/100).toFixed(2), trips=Math.ceil(vol/7);
+    return {q:`${area} m² 的範圍要鋪 ${thick} 公分厚的級配,要叫多少方的預拌車?大概幾趟?`, a:`${vol} 方,大概 ${trips} 趟`, steps:`${thick}cm ÷ 100 = ${(thick/100)}m(換成公尺)\n${area} × ${(thick/100)} = ${vol} 方\n一車約7方:${vol} ÷ 7 ≈ ${trips} 趟`, mantra:'口訣:「公分除以百變公尺,乘面積得體積」——先把厚度從公分換成公尺,再乘面積。'};
+  }},
+  material: { label:'材料需求量', gen(){
+    const area=rnd(20,200,5); const isCurve=Math.random()<0.4;
+    const loss=isCurve?rnd(15,20):rnd(5,10); const s=0.3;
+    const base=Math.ceil(area/(s*s)); const total=Math.ceil(base*(1+loss/100));
+    return {q:`${area} m² 的${isCurve?'弧形':'直線'}鋪面,用邊長0.3米的磚,損耗抓${loss}%,要叫多少塊磚?`, a:`約 ${total} 塊`, steps:`實鋪:${area} ÷ (0.3×0.3) = ${base} 塊\n加損耗:${base} × (1+${loss}%) ≈ ${total} 塊`, mantra:`口訣:「面積除單塊,損耗要加值」——${isCurve?'弧形/圓形切磚多,損耗抓15-20%':'直線鋪面損耗抓5-10%'}。`};
+  }},
+  column: { label:'柱子間隔', gen(){
+    const len=rnd(30,150,5), gap=[2.5,3,3.25,3.5,4][rnd(0,4)];
+    const count=Math.ceil(len/gap)+1;
+    return {q:`總長 ${len} 米要立柱子,柱距(中心距)${gap} 米一根,總共要幾根柱子?`, a:`${count} 根`, steps:`${len} ÷ ${gap} = ${(len/gap).toFixed(2)} → 無條件進位\n再加頭尾各一根的概念 → ${count} 根`, mantra:'口訣:「總長除柱距,無條件進位」——記得先確認柱距是中心距還是淨距,兩種算出來根數不一樣。'};
+  }},
+  quote: { label:'報價快算', gen(){
+    const area=rnd(30,200,5), curb=rnd(10,80,5), cut=rnd(0,20,5);
+    const total=area*300+curb*300+cut*250;
+    return {q:`舖設面積 ${area}m²、路緣 ${curb}米、切割收邊 ${cut}米,單價用300/300/250,報價總額是多少?`, a:`${total.toLocaleString('zh-TW')} 元`, steps:`舖設 ${area}×300=${area*300}\n路緣 ${curb}×300=${curb*300}\n切割收邊 ${cut}×250=${cut*250}\n合計 ${total.toLocaleString('zh-TW')}元`, mantra:'口訣:「乘300先乘3補兩個0,乘250先乘1000再除4」。'};
+  }},
+  wage: { label:'工資快算', gen(){
+    const n=rnd(2,8), d=rnd(1,5), total=n*d*1500;
+    return {q:`${n}個工人做${d}天,日薪1500,總工資是多少?`, a:`${total.toLocaleString('zh-TW')} 元`, steps:`${n} × ${d} = ${n*d}工\n${n*d} × 1500 = ${total.toLocaleString('zh-TW')}元`, mantra:'口訣:「人乘天算工,工乘日薪算錢」——先算總共幾工,再乘日薪。'};
+  }},
+  margin: { label:'分包利潤', gen(){
+    const total=rnd(50000,200000,5000), costPct=rnd(20,50)/100, cost=Math.round(total*costPct/1000)*1000;
+    const profit=total-cost, pct=+(profit/total*100).toFixed(1);
+    return {q:`分包總價${total.toLocaleString('zh-TW')}元,工人工資成本${cost.toLocaleString('zh-TW')}元,利潤跟利潤率各是多少?`, a:`利潤${profit.toLocaleString('zh-TW')}元,利潤率${pct}%`, steps:`利潤:${total.toLocaleString('zh-TW')} − ${cost.toLocaleString('zh-TW')} = ${profit.toLocaleString('zh-TW')}元\n利潤率:${profit.toLocaleString('zh-TW')} ÷ ${total.toLocaleString('zh-TW')} × 100 ≈ ${pct}%`, mantra:'口訣:「分包價減工資等於利潤」——這就是阿心/阿新那套邏輯,跟仲介抽成算法同一件事。'};
+  }},
+};
+let practiceType = 'area';
+let practiceCurrent = null;
+function renderPracticeChips(){
+  const box = document.getElementById('practiceChips');
+  box.innerHTML = Object.keys(PRACTICE_TYPES).map(k=>`<button class="chip ${k===practiceType?'active':''}" data-ptype="${k}">${PRACTICE_TYPES[k].label}</button>`).join('');
+  box.querySelectorAll('.chip').forEach(b=>{
+    b.addEventListener('click', ()=>{ practiceType = b.dataset.ptype; renderPracticeChips(); newPracticeQuestion(); });
+  });
+}
+function newPracticeQuestion(){
+  practiceCurrent = PRACTICE_TYPES[practiceType].gen();
+  document.getElementById('practiceQuestion').textContent = practiceCurrent.q;
+  const box = document.getElementById('practiceAnswerBox');
+  box.classList.remove('shown');
+  box.innerHTML = '';
+}
+document.getElementById('practiceRevealBtn').addEventListener('click', ()=>{
+  if(!practiceCurrent) return;
+  const box = document.getElementById('practiceAnswerBox');
+  box.innerHTML = `<div class="a-val">${practiceCurrent.a}</div><div class="a-explain" style="white-space:pre-line; margin:6px 0;">${practiceCurrent.steps}</div><div class="a-explain" style="color:var(--moss); font-weight:700;">${practiceCurrent.mantra}</div>`;
+  box.classList.add('shown');
+});
+document.getElementById('practiceNextBtn').addEventListener('click', newPracticeQuestion);
+renderPracticeChips();
+newPracticeQuestion();
+</script>
+</body>
+</html>
